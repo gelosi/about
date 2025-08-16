@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV + Survival Game</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    min-height: 100vh;
+  }
+  .sidebar {
+    background: #f9f9f9;
+    padding: 2rem;
+    box-shadow: inset -1px 0 0 #ddd;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .sidebar h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .sidebar p { margin: 0.2rem 0 1rem; color: #333; }
+  .contacts { margin-top: 1rem; }
+  .contacts a { display: block; color: #0073e6; text-decoration: none; margin: 0.2rem 0; }
+  .projects { margin-top: 1rem; }
+  .projects a { display: block; color: #0073e6; text-decoration: none; margin: 0.2rem 0; }
+
+  .game { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  canvas { width: 100%; height: 100%; display: block; background: #111; }
+
+  .controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.85);
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+  .controls button {
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: rgba(30,30,30,0.8);
+    color: #fff;
+    font-weight: bold;
+    transition: transform 0.1s ease, background 0.2s ease;
+  }
+  .controls button:hover { transform: scale(1.05); background: rgba(50,50,50,0.85); }
+
+  .hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
+    background: rgba(0,0,0,0.5);
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    z-index: 5;
+    display: none;
+  }
+  .overlay button {
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    background: limegreen;
+    color: #111;
+    transition: transform 0.1s ease;
+  }
+  .overlay button:hover { transform: scale(1.05); }
+
+  @media (max-width: 768px) {
+    body { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+    .sidebar { box-shadow: none; }
+    .game { min-height: 70vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h1>Oleg Shanyuk</h1>
+  <p>Engineering • Philosophy</p>
+  <p>Focus: code fine tune, system fine tune</p>
+  <p>Interested: iOS, Android, Linux</p>
+  <div class="contacts">
+    <h3>Contacts</h3>
+    <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
+    <a href="https://https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
+    <a href="https://github.com/gelosi">GitHub</a>
+  </div>
+  <div class="contacts">
+    <h3>Contacts</h3>
+    <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
+    <a href="https://https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
+    <a href="https://github.com/gelosi">GitHub</a>
+  </div>
+</div>
+
+<div class="game">
+  <canvas id="gameCanvas"></canvas>
+  <div class="hud" id="hud">Time: 0.0s | Controls: Mouse</div>
+  <div class="overlay" id="gameOver">
+    Attempt Complete
+    <div id="finalTime">0.0s</div>
+    <button id="newAttempt">New Attempt</button>
+  </div>
+  <div class="controls">
+    <button id="toggleControl">Controls: Mouse</button>
+    <button id="enableTilt">Enable Tilt</button>
+    <button id="resetGame">Reset</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const hud = document.getElementById('hud');
+const overlay = document.getElementById('gameOver');
+const finalTime = document.getElementById('finalTime');
+
+let width, height;
+function resizeCanvas() {
+  width = canvas.clientWidth;
+  height = canvas.clientHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let ball = { x: width/2, y: height/2, vx:0, vy:0, r:20 };
+let useMouse = true;
+let paused = false;
+let survivalTime = 0;
+let lastTime = performance.now();
+
+// Obstacles
+let obstacles = [];
+function spawnObstacle(){
+  const r = 15 + Math.random()*10;
+  obstacles.push({
+    x: Math.random()*width,
+    y: Math.random()*height,
+    vx: (Math.random()-0.5)*200,
+    vy: (Math.random()-0.5)*200,
+    r: r
+  });
+}
+for(let i=0;i<6;i++) spawnObstacle();
+
+// Mouse
+let mouseX = width/2, mouseY = height/2;
+canvas.addEventListener('mousemove', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
+
+// Tilt
+let tiltX=0, tiltY=0;
+document.getElementById('enableTilt').addEventListener('click', async()=>{
+  if(typeof DeviceMotionEvent.requestPermission==='function'){
+    try{
+      const res = await DeviceMotionEvent.requestPermission();
+      if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
+    }catch(e){console.log(e);}
+  }else{
+    window.addEventListener('deviceorientation', handleOrientation);
+  }
+});
+function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
+
+// Buttons
+document.getElementById('toggleControl').addEventListener('click', ()=>{
+  useMouse=!useMouse;
+  document.getElementById('toggleControl').textContent='Controls: '+(useMouse?'Mouse':'Tilt');
+});
+document.getElementById('resetGame').addEventListener('click', resetGame);
+document.getElementById('newAttempt').addEventListener('click', ()=>{overlay.style.display='none'; resetGame();});
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='p') paused=!paused;
+  if(e.key==='r') resetGame();
+});
+
+function resetGame(){
+  ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
+  survivalTime=0;
+  obstacles=[];
+  for(let i=0;i<6;i++) spawnObstacle();
+  paused=false;
+}
+
+function update(dt){
+  if(paused) return;
+  survivalTime+=dt;
+
+  if(useMouse){
+    const dx=mouseX-ball.x, dy=mouseY-ball.y;
+    ball.vx+=dx*0.002; ball.vy+=dy*0.002;
+  }else{
+    ball.vx+=tiltX*0.5; ball.vy+=tiltY*0.5;
+  }
+  ball.vx*=0.95; ball.vy*=0.95;
+  ball.x+=ball.vx*dt*60; ball.y+=ball.vy*dt*60;
+
+  // walls
+  if(ball.x-ball.r<0 || ball.x+ball.r>width){ ball.vx*=-1; ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); }
+  if(ball.y-ball.r<0 || ball.y+ball.r>height){ ball.vy*=-1; ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); }
+
+  // obstacles move & bounce
+  obstacles.forEach(o=>{
+    o.x+=o.vx*dt; o.y+=o.vy*dt;
+    if(o.x-o.r<0||o.x+o.r>width)o.vx*=-1;
+    if(o.y-o.r<0||o.y+o.r>height)o.vy*=-1;
+  });
+
+  // collisions
+  for(let o of obstacles){
+    const dx=ball.x-o.x, dy=ball.y-o.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<ball.r+o.r){
+      finalTime.textContent=survivalTime.toFixed(1)+'s';
+      overlay.style.display='flex';
+      paused=true;
+    }
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,width,height);
+  // ball
+  ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fillStyle='lime'; ctx.fill();
+  // obstacles
+  obstacles.forEach(o=>{
+    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fillStyle='red'; ctx.fill();
+  });
+  hud.textContent='Time: '+survivalTime.toFixed(1)+'s | Controls: '+(useMouse?'Mouse':'Tilt');
+}
+
+function loop(now){
+  const dt=(now-lastTime)/1000; lastTime=now;
+  update(dt); draw(); requestAnimationFrame(loop);
+}
+requestAnimationFrame((t)=>{lastTime=t; loop(t);});
+</script>
+
+</body>
+</html>
