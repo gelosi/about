@@ -1,5 +1,5 @@
 # about
-simple static page to be hosted at [www.shanyuk.com](www.shanyuk.com)
+simple static page to be hosted at [www.shanyuk.com](https://www.shanyuk.com)
 
 # list of ios and watch os projects
 - foodora, foodpanda, and many other food ordering brands/apps of DeliveryHero platform
