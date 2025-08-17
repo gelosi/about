@@ -172,7 +172,7 @@
     <button id="newAttempt">New Attempt</button>
   </div>
   <div class="controls">
-    <button id="resetGame" style="visibility: hidden;">Reset Game</button>
+    <button id="resetGame">Reset Game</button>
   </div>
 
   <div class="mobile-banner" id="mobileBanner">
@@ -191,6 +191,7 @@ const finalTime = document.getElementById('finalTime');
 const banner = document.getElementById('mobileBanner');
 const startMobileGameBtn = document.getElementById('startMobileGame');
 const controlsPanel = document.querySelector('.controls');
+controlsPanel.style.display = 'none'; // hide panel initially on mobile
 
 let width, height;
 function resizeCanvas() {
@@ -213,10 +214,12 @@ function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
 let useMouse = !isMobile(); // desktop: mouse, mobile: tilt
 let tiltEnabled = isMobile();
 
-if (isMobile()) {
-  controlsPanel.style.display = 'none'; // hide panel initially on mobile
+// Desktop: controls always visible
+if(isMobile()){
+  controlsPanel.style.display = 'none';
 } else {
-  controlsPanel.style.display = 'flex'; // desktop: show always
+  controlsPanel.style.display = 'flex';
+  tiltEnabled = false;
 }
 
 // Mouse
@@ -359,10 +362,10 @@ if(isMobile()){
 
 startMobileGameBtn.addEventListener('click', ()=>{
   banner.style.display='none';
-  tiltEnabled = true;           // enable tilt
   enableTilt();                 // request permission and attach event listener
   checkOrientation();
   resetGame();
+  tiltEnabled = true;           // enable tilt
 });
 
 requestAnimationFrame((t)=>{lastTime=t; loop(t);});
