@@ -7,7 +7,6 @@
 <style>
   body {
     margin: 0;
-    /* one must play with fonts :) */
     font-family: 'Fira Code', 'Roboto Mono', 'IBM Plex Mono', 'JetBrains Mono','Source Code Pro', 'Consolas' , 'SF Mono', monospace;
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -94,6 +93,30 @@
   }
   .overlay button:hover { transform: scale(1.05); }
 
+  .mobile-banner {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+    z-index: 20;
+  }
+  .mobile-banner button {
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    background: limegreen;
+    color: #111;
+  }
+
   @media (max-width: 768px) {
     body { grid-template-columns: 1fr; grid-template-rows: auto auto; }
     .sidebar { box-shadow: none; }
@@ -106,12 +129,12 @@
 <div class="sidebar">
   <h1>Oleg Shanyuk</h1>
   <p>Engineering</p>
-  <p>Focus: mobile, code fine tune, systems design</p>
+  <p>Focus: mobile, code fine tune, system design</p>
   <p>Interested: iOS (Android, Linux)</p>
   <div class="contacts">
     <h3>Contacts</h3>
     obviously, <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
-    <a href="https://https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
+    <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
     <a href="https://github.com/gelosi">GitHub</a>
     <a href="https://mastodon.social/@gelosi">Mastodon</a> (random)
   </div>
@@ -129,7 +152,7 @@
   </div>
   <div class="projects">
     <h3>Honorable Mention Logs</h3>
-        <a href="https://apps.apple.com/ua/app/circula/id1273137131">Circula iOS app</a>
+    <a href="https://apps.apple.com/ua/app/circula/id1273137131">Circula iOS app</a>
   </div>
 </div>
 
@@ -148,12 +171,21 @@
   </div>
 </div>
 
+<!-- Banner shown on mobile before game -->
+<div class="mobile-banner" id="mobileBanner">
+  <h2>Rotate your phone</h2>
+  <p>Keep your phone <strong>horizontally</strong> and allow access to gyroscope to play.</p>
+  <button id="startMobileGame">Start Game</button>
+</div>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const hud = document.getElementById('hud');
 const overlay = document.getElementById('gameOver');
 const finalTime = document.getElementById('finalTime');
+const banner = document.getElementById('mobileBanner');
+const startMobileGameBtn = document.getElementById('startMobileGame');
 
 let width, height;
 function resizeCanvas() {
@@ -167,9 +199,9 @@ resizeCanvas();
 
 let ball = { x: width/2, y: height/2, vx:0, vy:0, r:20 };
 let useMouse = true;
-let paused = false;
 let survivalTime = 0;
 let lastTime = performance.now();
+let running = false;
 
 // Obstacles
 let obstacles = [];
@@ -195,40 +227,38 @@ canvas.addEventListener('mousemove', (e)=>{
 
 // Tilt
 let tiltX=0, tiltY=0;
-document.getElementById('enableTilt').addEventListener('click', async()=>{
-  if(typeof DeviceMotionEvent.requestPermission==='function'){
-    try{
-      const res = await DeviceMotionEvent.requestPermission();
+function enableTilt(){
+  if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission==='function'){
+    DeviceMotionEvent.requestPermission().then(res=>{
       if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
-    }catch(e){console.log(e);}
+    }).catch(console.error);
   }else{
     window.addEventListener('deviceorientation', handleOrientation);
   }
-});
+}
 function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
 
 // Buttons
+document.getElementById('enableTilt').addEventListener('click', enableTilt);
 document.getElementById('toggleControl').addEventListener('click', ()=>{
   useMouse=!useMouse;
   document.getElementById('toggleControl').textContent='Controls: '+(useMouse?'Mouse':'Tilt');
 });
 document.getElementById('resetGame').addEventListener('click', resetGame);
 document.getElementById('newAttempt').addEventListener('click', ()=>{overlay.style.display='none'; resetGame();});
-document.addEventListener('keydown', (e)=>{
-  if(e.key==='p') paused=!paused;
-  if(e.key==='r') resetGame();
-});
 
+// Reset
 function resetGame(){
   ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
   survivalTime=0;
   obstacles=[];
   for(let i=0;i<6;i++) spawnObstacle();
-  paused=false;
+  running=true;
 }
 
+// Game logic
 function update(dt){
-  if(paused) return;
+  if(!running) return;
   survivalTime+=dt;
 
   if(useMouse){
@@ -241,8 +271,16 @@ function update(dt){
   ball.x+=ball.vx*dt*60; ball.y+=ball.vy*dt*60;
 
   // walls
-  if(ball.x-ball.r<0 || ball.x+ball.r>width){ ball.vx*=-1; ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); }
-  if(ball.y-ball.r<0 || ball.y+ball.r>height){ ball.vy*=-1; ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); }
+  if(ball.x-ball.r<0 || ball.x+ball.r>width){ 
+    ball.vx*=-1; 
+    ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); 
+    if(navigator.vibrate) navigator.vibrate(20);
+  }
+  if(ball.y-ball.r<0 || ball.y+ball.r>height){ 
+    ball.vy*=-1; 
+    ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); 
+    if(navigator.vibrate) navigator.vibrate(20);
+  }
 
   // obstacles move & bounce
   obstacles.forEach(o=>{
@@ -258,16 +296,15 @@ function update(dt){
     if(dist<ball.r+o.r){
       finalTime.textContent=survivalTime.toFixed(1)+'s';
       overlay.style.display='flex';
-      paused=true;
+      running=false;
+      if(navigator.vibrate) navigator.vibrate([100,50,150]); // crash feedback
     }
   }
 }
 
 function draw(){
   ctx.clearRect(0,0,width,height);
-  // ball
   ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fillStyle='lime'; ctx.fill();
-  // obstacles
   obstacles.forEach(o=>{
     ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fillStyle='red'; ctx.fill();
   });
@@ -276,8 +313,37 @@ function draw(){
 
 function loop(now){
   const dt=(now-lastTime)/1000; lastTime=now;
-  update(dt); draw(); requestAnimationFrame(loop);
+  if(running) update(dt);
+  draw();
+  requestAnimationFrame(loop);
 }
+
+// Pause when not visible
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      running=true;
+    } else {
+      running=false;
+    }
+  });
+},{threshold:0.1});
+observer.observe(canvas);
+
+// Mobile detection
+function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
+if(isMobile()){
+  banner.style.display='flex';
+  startMobileGameBtn.addEventListener('click', ()=>{
+    banner.style.display='none';
+    useMouse=false;
+    enableTilt();
+    resetGame();
+  });
+}else{
+  resetGame();
+}
+
 requestAnimationFrame((t)=>{lastTime=t; loop(t);});
 </script>
 
