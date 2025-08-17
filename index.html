@@ -27,7 +27,14 @@
   .projects { margin-top: 1rem; }
   .projects a { display: block; color: #0073e6; text-decoration: none; margin: 0.2rem 0; }
 
-  .game { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  .game { 
+    position: relative; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    overflow: hidden; 
+  }
   canvas { width: 100%; height: 100%; display: block; background: #111; }
 
   .controls {
@@ -94,7 +101,7 @@
   .overlay button:hover { transform: scale(1.05); }
 
   .mobile-banner {
-    position: fixed;
+    position: absolute; 
     top:0; left:0; right:0; bottom:0;
     background: rgba(0,0,0,0.85);
     color: white;
@@ -169,13 +176,13 @@
     <button id="enableTilt">Enable Tilt</button>
     <button id="resetGame">Reset</button>
   </div>
-</div>
 
-<!-- Banner shown on mobile before game -->
-<div class="mobile-banner" id="mobileBanner">
-  <h2>Rotate your phone</h2>
-  <p>Keep your phone <strong>horizontally</strong> and allow access to gyroscope to play.</p>
-  <button id="startMobileGame">Start Game</button>
+  <!-- Mobile banner overlays only the game area -->
+  <div class="mobile-banner" id="mobileBanner">
+    <h2>Rotate your phone</h2>
+    <p>Keep your phone <strong>horizontally</strong> and allow access to gyroscope to play.</p>
+    <button id="startMobileGame">Start Game</button>
+  </div>
 </div>
 
 <script>
@@ -318,31 +325,34 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
-// Pause when not visible
+// Pause/resume + show banner only when game visible
+function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
+
 const observer = new IntersectionObserver(entries=>{
   entries.forEach(entry=>{
     if(entry.isIntersecting){
-      running=true;
+      if(isMobile() && !running){ 
+        banner.style.display='flex';
+      } else {
+        running=true;
+      }
     } else {
       running=false;
     }
   });
 },{threshold:0.1});
-observer.observe(canvas);
+observer.observe(document.querySelector('.game'));
 
-// Mobile detection
-function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
-if(isMobile()){
-  banner.style.display='flex';
-  startMobileGameBtn.addEventListener('click', ()=>{
-    banner.style.display='none';
-    useMouse=false;
-    enableTilt();
-    resetGame();
-  });
-}else{
-  resetGame();
+if(!isMobile()){
+  resetGame(); // desktop starts immediately
 }
+
+startMobileGameBtn.addEventListener('click', ()=>{
+  banner.style.display='none';
+  useMouse=false;
+  enableTilt();
+  resetGame();
+});
 
 requestAnimationFrame((t)=>{lastTime=t; loop(t);});
 </script>
