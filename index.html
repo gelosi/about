@@ -165,19 +165,16 @@
 
 <div class="game">
   <canvas id="gameCanvas"></canvas>
-  <div class="hud" id="hud">Time: 0.0s | Controls: Mouse</div>
+  <div class="hud" id="hud">Time: 0.0s | Controls: Tilt</div>
   <div class="overlay" id="gameOver">
     Attempt Complete
     <div id="finalTime">0.0s</div>
     <button id="newAttempt">New Attempt</button>
   </div>
   <div class="controls">
-    <button id="toggleControl">Controls: Mouse</button>
-    <button id="enableTilt">Enable Tilt</button>
-    <button id="resetGame">Reset</button>
+    <button id="resetGame">Reset Game</button>
   </div>
 
-  <!-- Mobile banner overlays only the game area -->
   <div class="mobile-banner" id="mobileBanner">
     <h2>Rotate your phone</h2>
     <p>Keep your phone <strong>horizontally</strong> and allow access to gyroscope to play.</p>
@@ -205,10 +202,47 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 let ball = { x: width/2, y: height/2, vx:0, vy:0, r:20 };
-let useMouse = true;
+let tiltX=0, tiltY=0;
 let survivalTime = 0;
 let lastTime = performance.now();
 let running = false;
+
+function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
+
+let useMouse = !isMobile(); // desktop: mouse, mobile: tilt
+let tiltEnabled = isMobile();
+
+// Mouse
+let mouseX = width/2, mouseY = height/2;
+canvas.addEventListener('mousemove', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
+
+// Tilt
+function enableTilt(){
+  if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission==='function'){
+    DeviceMotionEvent.requestPermission().then(res=>{
+      if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
+    }).catch(console.error);
+  }else{
+    window.addEventListener('deviceorientation', handleOrientation);
+  }
+}
+function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
+
+// Reset
+document.getElementById('resetGame').addEventListener('click', resetGame);
+document.getElementById('newAttempt').addEventListener('click', ()=>{overlay.style.display='none'; resetGame();});
+
+function resetGame(){
+  ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
+  survivalTime=0;
+  obstacles=[];
+  for(let i=0;i<6;i++) spawnObstacle();
+  running=true;
+}
 
 // Obstacles
 let obstacles = [];
@@ -224,45 +258,6 @@ function spawnObstacle(){
 }
 for(let i=0;i<6;i++) spawnObstacle();
 
-// Mouse
-let mouseX = width/2, mouseY = height/2;
-canvas.addEventListener('mousemove', (e)=>{
-  const rect = canvas.getBoundingClientRect();
-  mouseX = e.clientX - rect.left;
-  mouseY = e.clientY - rect.top;
-});
-
-// Tilt
-let tiltX=0, tiltY=0;
-function enableTilt(){
-  if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission==='function'){
-    DeviceMotionEvent.requestPermission().then(res=>{
-      if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
-    }).catch(console.error);
-  }else{
-    window.addEventListener('deviceorientation', handleOrientation);
-  }
-}
-function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
-
-// Buttons
-document.getElementById('enableTilt').addEventListener('click', enableTilt);
-document.getElementById('toggleControl').addEventListener('click', ()=>{
-  useMouse=!useMouse;
-  document.getElementById('toggleControl').textContent='Controls: '+(useMouse?'Mouse':'Tilt');
-});
-document.getElementById('resetGame').addEventListener('click', resetGame);
-document.getElementById('newAttempt').addEventListener('click', ()=>{overlay.style.display='none'; resetGame();});
-
-// Reset
-function resetGame(){
-  ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
-  survivalTime=0;
-  obstacles=[];
-  for(let i=0;i<6;i++) spawnObstacle();
-  running=true;
-}
-
 // Game logic
 function update(dt){
   if(!running) return;
@@ -271,32 +266,28 @@ function update(dt){
   if(useMouse){
     const dx=mouseX-ball.x, dy=mouseY-ball.y;
     ball.vx+=dx*0.002; ball.vy+=dy*0.002;
-  }else{
+  } else if(tiltEnabled){
     ball.vx+=tiltX*0.5; ball.vy+=tiltY*0.5;
   }
+
   ball.vx*=0.95; ball.vy*=0.95;
   ball.x+=ball.vx*dt*60; ball.y+=ball.vy*dt*60;
 
-  // walls
   if(ball.x-ball.r<0 || ball.x+ball.r>width){ 
-    ball.vx*=-1; 
-    ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); 
+    ball.vx*=-1; ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); 
     if(navigator.vibrate) navigator.vibrate(20);
   }
   if(ball.y-ball.r<0 || ball.y+ball.r>height){ 
-    ball.vy*=-1; 
-    ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); 
+    ball.vy*=-1; ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); 
     if(navigator.vibrate) navigator.vibrate(20);
   }
 
-  // obstacles move & bounce
   obstacles.forEach(o=>{
     o.x+=o.vx*dt; o.y+=o.vy*dt;
     if(o.x-o.r<0||o.x+o.r>width)o.vx*=-1;
     if(o.y-o.r<0||o.y+o.r>height)o.vy*=-1;
   });
 
-  // collisions
   for(let o of obstacles){
     const dx=ball.x-o.x, dy=ball.y-o.y;
     const dist=Math.sqrt(dx*dx+dy*dy);
@@ -304,7 +295,7 @@ function update(dt){
       finalTime.textContent=survivalTime.toFixed(1)+'s';
       overlay.style.display='flex';
       running=false;
-      if(navigator.vibrate) navigator.vibrate([100,50,150]); // crash feedback
+      if(navigator.vibrate) navigator.vibrate([100,50,150]);
     }
   }
 }
@@ -325,9 +316,6 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
-// Pause/resume + show banner only when game visible
-function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
-
 const observer = new IntersectionObserver(entries=>{
   entries.forEach(entry=>{
     if(entry.isIntersecting){
@@ -343,14 +331,16 @@ const observer = new IntersectionObserver(entries=>{
 },{threshold:0.1});
 observer.observe(document.querySelector('.game'));
 
-if(!isMobile()){
+if(isMobile()){
+  enableTilt(); // auto enable tilt on mobile
+} else {
   resetGame(); // desktop starts immediately
 }
 
 startMobileGameBtn.addEventListener('click', ()=>{
   banner.style.display='none';
-  useMouse=false;
   enableTilt();
+  tiltEnabled = true;
   resetGame();
 });
 
