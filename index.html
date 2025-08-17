@@ -159,7 +159,7 @@
     obviously, <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
     <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
     <a href="https://github.com/gelosi">GitHub</a>
-    <a href="https://mastodon.social/@gelosi">Mastodon</a>
+    <a href="https://mastodon.social/@gelosi">Mastodon</a> (random)
   </div>
 </div>
 
@@ -190,7 +190,7 @@ const overlay = document.getElementById('gameOver');
 const finalTime = document.getElementById('finalTime');
 const banner = document.getElementById('mobileBanner');
 const startMobileGameBtn = document.getElementById('startMobileGame');
-let btnReference = document.getElementById('resetGame');
+const controlsPanel = document.querySelector('.controls');
 
 let width, height;
 function resizeCanvas() {
@@ -208,12 +208,16 @@ let survivalTime = 0;
 let lastTime = performance.now();
 let running = false;
 
-btnReference.style.visibility = 'hidden'; // Added visibility attribute set up
-
 function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
 
 let useMouse = !isMobile(); // desktop: mouse, mobile: tilt
 let tiltEnabled = isMobile();
+
+if (isMobile()) {
+  controlsPanel.style.display = 'none'; // hide panel initially on mobile
+} else {
+  controlsPanel.style.display = 'flex'; // desktop: show always
+}
 
 // Mouse
 let mouseX = width/2, mouseY = height/2;
@@ -256,7 +260,7 @@ function resetGame(){
   obstacles=[];
   for(let i=0;i<6;i++) spawnObstacle();
   running=true;
-  btnReference.style.visibility = 'visible'; // When game starts, the reset button becomes visible
+  controlsPanel.style.display='flex'; // only show on mobile after starting
 }
 
 // Obstacles
@@ -356,8 +360,8 @@ if(isMobile()){
 
 startMobileGameBtn.addEventListener('click', ()=>{
   banner.style.display='none';
-  enableTilt();
-  tiltEnabled = true;
+  tiltEnabled = true;           // enable tilt
+  enableTilt();                 // request permission and attach event listener
   checkOrientation();
   resetGame();
 });
