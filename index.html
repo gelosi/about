@@ -176,8 +176,8 @@
   </div>
 
   <div class="mobile-banner" id="mobileBanner">
-    <h2>Rotate your phone</h2>
-    <p><strong>Tilt your phone like if lies on the table, keep it in portrait orientation</strong>, and allow access to gyroscope to play.</p>
+    <h2>Tilt your phone flat</h2>
+    <p>Tilt your phone flat like if lies on the table, <strong>keep it in portrait orientation</strong>, and allow access to gyroscope to play.</p>
     <button id="startMobileGame">Start Game</button>
   </div>
 </div>
@@ -225,7 +225,6 @@ canvas.addEventListener('mousemove', (e)=>{
   const rect = canvas.getBoundingClientRect();
   mouseX = e.clientX - rect.left;
   mouseY = e.clientY - rect.top;
-  handleOrientation();
 });
 
 // Tilt
