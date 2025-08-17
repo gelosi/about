@@ -138,13 +138,6 @@
   <p>Engineering</p>
   <p>Focus: mobile, code fine tune, system design</p>
   <p>Interested: iOS (Android, Linux)</p>
-  <div class="contacts">
-    <h3>Contacts</h3>
-    obviously, <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
-    <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
-    <a href="https://github.com/gelosi">GitHub</a>
-    <a href="https://mastodon.social/@gelosi">Mastodon</a> (random)
-  </div>
   <div class="projects">
     <h3>Work Logs</h3>
     <a href="https://apps.apple.com/us/app/foodpanda-food-groceries/id758103884">DeliveryHero – Platfom – Foodora/Foodpanda iOS apps</a>
@@ -161,6 +154,13 @@
     <h3>Honorable Mention Logs</h3>
     <a href="https://apps.apple.com/ua/app/circula/id1273137131">Circula iOS app</a>
   </div>
+  <div class="contacts">
+    <h3>Contacts</h3>
+    obviously, <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
+    <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
+    <a href="https://github.com/gelosi">GitHub</a>
+    <a href="https://mastodon.social/@gelosi">Mastodon</a>
+  </div>
 </div>
 
 <div class="game">
@@ -172,12 +172,12 @@
     <button id="newAttempt">New Attempt</button>
   </div>
   <div class="controls">
-    <button id="resetGame">Reset Game</button>
+    <button id="resetGame" style="visibility: hidden;">Reset Game</button>
   </div>
 
   <div class="mobile-banner" id="mobileBanner">
     <h2>Rotate your phone</h2>
-    <p>Keep your phone <strong>horizontally</strong> and allow access to gyroscope to play.</p>
+    <p><strong>Tilt your phone like if lies on the table, keep it in portrait orientation</strong>, and allow access to gyroscope to play.</p>
     <button id="startMobileGame">Start Game</button>
   </div>
 </div>
@@ -190,6 +190,7 @@ const overlay = document.getElementById('gameOver');
 const finalTime = document.getElementById('finalTime');
 const banner = document.getElementById('mobileBanner');
 const startMobileGameBtn = document.getElementById('startMobileGame');
+let btnReference = document.getElementById('resetGame');
 
 let width, height;
 function resizeCanvas() {
@@ -207,6 +208,8 @@ let survivalTime = 0;
 let lastTime = performance.now();
 let running = false;
 
+btnReference.style.visibility = 'hidden'; // Added visibility attribute set up
+
 function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
 
 let useMouse = !isMobile(); // desktop: mouse, mobile: tilt
@@ -218,6 +221,7 @@ canvas.addEventListener('mousemove', (e)=>{
   const rect = canvas.getBoundingClientRect();
   mouseX = e.clientX - rect.left;
   mouseY = e.clientY - rect.top;
+  handleOrientation();
 });
 
 // Tilt
@@ -231,6 +235,16 @@ function enableTilt(){
   }
 }
 function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
+function checkOrientation()  {  
+  if (window.innerWidth > window.innerHeight){
+    // landscape
+    resizeCanvas();
+  } else {
+    // portrait
+    resizeCanvas();
+  }
+}
+window.addEventListener('resize', checkOrientation);
 
 // Reset
 document.getElementById('resetGame').addEventListener('click', resetGame);
@@ -242,6 +256,7 @@ function resetGame(){
   obstacles=[];
   for(let i=0;i<6;i++) spawnObstacle();
   running=true;
+  btnReference.style.visibility = 'visible'; // When game starts, the reset button becomes visible
 }
 
 // Obstacles
@@ -332,6 +347,8 @@ const observer = new IntersectionObserver(entries=>{
 observer.observe(document.querySelector('.game'));
 
 if(isMobile()){
+  checkOrientation();
+  handleOrientation();
   enableTilt(); // auto enable tilt on mobile
 } else {
   resetGame(); // desktop starts immediately
@@ -341,6 +358,7 @@ startMobileGameBtn.addEventListener('click', ()=>{
   banner.style.display='none';
   enableTilt();
   tiltEnabled = true;
+  checkOrientation();
   resetGame();
 });
 
