@@ -282,18 +282,21 @@ for(let i=0;i<6;i++) spawnObstacle();
 // Game logic
 function update(dt){
   if(!running) return;
-  survivalTime+=dt;
+  survivalTime += dt;
 
+  // Player movement
   if(useMouse){
-    const dx=mouseX-ball.x, dy=mouseY-ball.y;
-    ball.vx+=dx*0.002; ball.vy+=dy*0.002;
+    const dx = mouseX - ball.x, dy = mouseY - ball.y;
+    ball.vx += dx * 0.002; ball.vy += dy * 0.002;
   } else if(tiltEnabled){
-    ball.vx+=tiltX*0.5; ball.vy+=tiltY*0.5;
+    ball.vx += tiltX * 0.5; ball.vy += tiltY * 0.5;
   }
 
-  ball.vx*=0.95; ball.vy*=0.95;
-  ball.x+=ball.vx*dt*60; ball.y+=ball.vy*dt*60;
+  ball.vx *= 0.95; ball.vy *= 0.95;
+  ball.x += ball.vx * dt * 60;
+  ball.y += ball.vy * dt * 60;
 
+  // Bounce off walls
   if(ball.x-ball.r<0 || ball.x+ball.r>width){ 
     ball.vx*=-1; ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); 
     if(navigator.vibrate) navigator.vibrate(20);
@@ -303,17 +306,63 @@ function update(dt){
     if(navigator.vibrate) navigator.vibrate(20);
   }
 
+  // Update dog positions
   obstacles.forEach(o=>{
-    o.x+=o.vx*dt; o.y+=o.vy*dt;
-    if(o.x-o.r<0||o.x+o.r>width)o.vx*=-1;
-    if(o.y-o.r<0||o.y+o.r>height)o.vy*=-1;
+    o.x += o.vx * dt;
+    o.y += o.vy * dt;
+    if(o.x-o.r<0||o.x+o.r>width) o.vx*=-1;
+    if(o.y-o.r<0||o.y+o.r>height) o.vy*=-1;
   });
 
+  // ✅ Dog–dog collisions with size-based mass
+  for (let i = 0; i < obstacles.length; i++) {
+    for (let j = i + 1; j < obstacles.length; j++) {
+      const a = obstacles[i], b = obstacles[j];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const minDist = a.r + b.r;
+
+      if (dist < minDist) {
+        // Mass proportional to area (πr²) → we use r²
+        const ma = a.r * a.r;
+        const mb = b.r * b.r;
+
+        // Normal
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        // Relative velocity along normal
+        const dvx = a.vx - b.vx;
+        const dvy = a.vy - b.vy;
+        const relVel = dvx * nx + dvy * ny;
+
+        if (relVel < 0) {
+          // Elastic collision impulse (1D along normal)
+          const impulse = (2 * relVel) / (ma + mb);
+
+          // Apply velocity change
+          a.vx -= impulse * mb * nx;
+          a.vy -= impulse * mb * ny;
+          b.vx += impulse * ma * nx;
+          b.vy += impulse * ma * ny;
+        }
+
+        // Position correction (push apart to avoid overlap)
+        const overlap = (minDist - dist) / 2;
+        a.x -= nx * (overlap * (mb / (ma + mb)));
+        a.y -= ny * (overlap * (mb / (ma + mb)));
+        b.x += nx * (overlap * (ma / (ma + mb)));
+        b.y += ny * (overlap * (ma / (ma + mb)));
+      }
+    }
+  }
+
+  // Check collision with cat
   for(let o of obstacles){
     const dx=ball.x-o.x, dy=ball.y-o.y;
     const dist=Math.sqrt(dx*dx+dy*dy);
     if(dist<ball.r+o.r){
-      finalTime.textContent=survivalTime.toFixed(1)+'s';
+      finalTime.textContent = survivalTime.toFixed(1)+'s';
       overlay.style.display='flex';
       running=false;
       if(navigator.vibrate) navigator.vibrate([100,50,150]);
