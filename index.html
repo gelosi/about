@@ -354,18 +354,16 @@ observer.observe(document.querySelector('.game'));
 
 if(isMobile()){
   checkOrientation();
-  handleOrientation();
-  enableTilt(); // auto enable tilt on mobile
 } else {
   resetGame(); // desktop starts immediately
 }
 
 startMobileGameBtn.addEventListener('click', ()=>{
   banner.style.display='none';
-  enableTilt();                 // request permission and attach event listener
+  enableTilt();                 // ✅ now called on user gesture
   checkOrientation();
   resetGame();
-  tiltEnabled = true;           // enable tilt
+  tiltEnabled = true;
 });
 
 requestAnimationFrame((t)=>{lastTime=t; loop(t);});
