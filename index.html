@@ -357,6 +357,31 @@ function update(dt){
     }
   }
 
+  // check if dogs are in the box after collision updates
+  // After updating all dogs and handling dog–dog collisions:
+  for (let o of obstacles) {
+    // Clamp inside horizontal bounds
+    if (o.x - o.r < 0) {
+      o.x = o.r;
+      if (o.vx < 0) o.vx *= -1;
+    }
+    if (o.x + o.r > width) {
+      o.x = width - o.r;
+      if (o.vx > 0) o.vx *= -1;
+    }
+
+    // Clamp inside vertical bounds
+    if (o.y - o.r < 0) {
+      o.y = o.r;
+      if (o.vy < 0) o.vy *= -1;
+    }
+    if (o.y + o.r > height) {
+      o.y = height - o.r;
+      if (o.vy > 0) o.vy *= -1;
+    }
+  }
+
+
   // Check collision with cat
   for(let o of obstacles){
     const dx=ball.x-o.x, dy=ball.y-o.y;
