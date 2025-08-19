@@ -323,11 +323,22 @@ function update(dt){
 
 function draw(){
   ctx.clearRect(0,0,width,height);
-  ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fillStyle='lime'; ctx.fill();
+
+  // 🐱 Player (cat)
+  ctx.font = (ball.r * 2) + "px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🐱", ball.x, ball.y);
+
+  // 🐶 Obstacles (dogs)
   obstacles.forEach(o=>{
-    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fillStyle='red'; ctx.fill();
+    ctx.font = (o.r * 2) + "px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🐶", o.x, o.y);
   });
-  hud.textContent='Time: '+survivalTime.toFixed(1)+'s | Controls: '+(useMouse?'Mouse':'Tilt');
+
+  hud.textContent = 'Time: ' + survivalTime.toFixed(1) + 's | Controls: ' + (useMouse ? 'Mouse' : 'Tilt');
 }
 
 function loop(now){
