@@ -172,6 +172,8 @@
     <button id="newAttempt">New Attempt</button>
   </div>
   <div class="controls">
+    <button id="easyMode">Easy</button>
+    <button id="hardMode">Hard</button>
     <button id="resetGame">Reset Game</button>
   </div>
 
@@ -252,21 +254,30 @@ function checkOrientation()  {
 }
 window.addEventListener('resize', checkOrientation);
 
-// Reset
-document.getElementById('resetGame').addEventListener('click', resetGame);
-document.getElementById('newAttempt').addEventListener('click', ()=>{overlay.style.display='none'; resetGame();});
+// Buttons
+document.getElementById('resetGame').addEventListener('click', ()=>resetGame(dogCount));
+document.getElementById('easyMode').addEventListener('click', ()=>resetGame(2));
+document.getElementById('hardMode').addEventListener('click', ()=>resetGame(10));
+document.getElementById('newAttempt').addEventListener('click', ()=>{
+  overlay.style.display='none'; 
+  resetGame(dogCount);
+});
 
-function resetGame(){
+// Reset with difficulty
+function resetGame(count = dogCount){
   ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
   survivalTime=0;
   obstacles=[];
-  for(let i=0;i<6;i++) spawnObstacle();
+  dogCount = count; // store choice
+  for(let i=0;i<count;i++) spawnObstacle();
   running=true;
   controlsPanel.style.display='flex'; // only show on mobile after starting
 }
 
 // Obstacles
 let obstacles = [];
+let dogCount = 2; // ✅ default is Easy (2 dogs)
+
 function spawnObstacle(){
   const r = 15 + Math.random()*10;
   obstacles.push({
