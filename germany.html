@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Property Scout</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 0;
+            background-color: #f8fafc;
+        }
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 0.75rem;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        .leaflet-popup-content { margin: 0; width: 260px !important; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col md:flex-row overflow-hidden font-sans text-slate-800">
+
+    <!-- Sidebar -->
+    <div class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl h-[45vh] md:h-full transition-transform relative">
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-100 bg-slate-900 text-white">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="ph-fill ph-house-line text-emerald-400"></i>
+                German Scout
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">Finding the perfect plot (< 1M pop)</p>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-6">
+            
+            <!-- Filters / Legend -->
+            <div class="space-y-3">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Criteria Layers</h2>
+                <div class="bg-white rounded-xl border border-slate-200 p-3 space-y-2 shadow-sm">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="layer-airports" checked onchange="toggleLayer('airports')" class="accent-blue-600 w-4 h-4">
+                        <div class="flex-1 flex items-center gap-2 text-sm text-slate-600 group-hover:text-blue-600 transition">
+                            <i class="ph-fill ph-airplane-tilt text-blue-500"></i> Airports (< 1.5h)
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="layer-trains" checked onchange="toggleLayer('trains')" class="accent-red-600 w-4 h-4">
+                        <div class="flex-1 flex items-center gap-2 text-sm text-slate-600 group-hover:text-red-600 transition">
+                            <i class="ph-fill ph-train text-red-500"></i> ICE Stations (< 1h)
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="layer-mountains" checked onchange="toggleLayer('mountains')" class="accent-emerald-600 w-4 h-4">
+                        <div class="flex-1 flex items-center gap-2 text-sm text-slate-600 group-hover:text-emerald-600 transition">
+                            <i class="ph-fill ph-mountains text-emerald-500"></i> Nature/Hills (< 1.5h)
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Top Candidates -->
+            <div>
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Top "Sweet Spot" Regions</h2>
+                <div id="candidates-list" class="space-y-3">
+                    <!-- Items injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 border-t border-slate-100 bg-slate-50 text-xs text-center text-slate-400">
+            Map centers on Germany (Lat: 51.16, Lng: 10.45)
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="flex-1 relative h-[55vh] md:h-full">
+        <div id="map"></div>
+        
+        <!-- Floating Info -->
+        <div class="absolute bottom-6 right-6 z-[1000] hidden md:block">
+            <div class="bg-white/90 backdrop-blur shadow-lg rounded-lg p-3 text-xs text-slate-500 border border-slate-200">
+                <span class="font-bold text-slate-700">Tip:</span> Overlapping circles indicate ideal locations.
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // --- Configuration ---
+        const CONFIG = {
+            // Radii in meters (approximate driving distance logic)
+            // 1.5h drive ~= 100km - 120km buffer
+            // 1h train ~= 80km buffer
+            radius: {
+                airport: 100000, 
+                train: 70000,
+                mountain: 50000
+            }
+        };
+
+        // --- Data Sets ---
+        const AIRPORTS = [
+            { name: "Frankfurt (FRA)", lat: 50.0379, lng: 8.5622 },
+            { name: "Munich (MUC)", lat: 48.3536, lng: 11.7750 },
+            { name: "Düsseldorf (DUS)", lat: 51.2891, lng: 6.7668 },
+            { name: "Berlin (BER)", lat: 52.3667, lng: 13.5033 },
+            { name: "Hamburg (HAM)", lat: 53.6336, lng: 9.9974 },
+            { name: "Stuttgart (STR)", lat: 48.6899, lng: 9.2219 },
+            { name: "Cologne/Bonn (CGN)", lat: 50.8659, lng: 7.1427 }
+        ];
+
+        const ICE_HUBS = [
+            { name: "Frankfurt Hbf", lat: 50.1071, lng: 8.6638 },
+            { name: "Köln Hbf", lat: 50.9413, lng: 6.9583 },
+            { name: "Montabaur (ICE)", lat: 50.4367, lng: 7.8258 },
+            { name: "Limburg Süd", lat: 50.3809, lng: 8.0872 },
+            { name: "Stuttgart Hbf", lat: 48.7832, lng: 9.1824 },
+            { name: "Karlsruhe Hbf", lat: 48.9936, lng: 8.4017 },
+            { name: "Freiburg Hbf", lat: 47.9978, lng: 7.8421 },
+            { name: "München Hbf", lat: 48.1403, lng: 11.5600 },
+            { name: "Offenburg", lat: 48.4708, lng: 7.9438 },
+            { name: "Göttingen", lat: 51.5368, lng: 9.9261 }
+        ];
+
+        const MOUNTAINS = [
+            { name: "The Alps (Bavaria)", lat: 47.55, lng: 11.1, desc: "Premier hiking & skiing" },
+            { name: "Black Forest", lat: 48.2, lng: 8.15, desc: "Dense forest, rolling hills" },
+            { name: "Harz Mountains", lat: 51.8, lng: 10.5, desc: "Central mountain range" },
+            { name: "Eifel / Ardennes", lat: 50.3, lng: 6.9, desc: "Volcanic lakes & trails" },
+            { name: "Taunus", lat: 50.2, lng: 8.45, desc: "Near Frankfurt" },
+            { name: "Bavarian Forest", lat: 49.0, lng: 13.0, desc: "Wilderness border" }
+        ];
+
+        const CANDIDATES = [
+            {
+                id: 1,
+                name: "Montabaur Area",
+                region: "Rhineland-Palatinate",
+                lat: 50.4367, 
+                lng: 7.8258,
+                pros: "30m to FRA Airport, ICE Stop in town, affordable land.",
+                hospital: "Catholic Hospital Montabaur",
+                school: "Mons-Tabor-Gymnasium"
+            },
+            {
+                id: 2,
+                name: "Offenburg / Ortenau",
+                region: "Baden-Württemberg",
+                lat: 48.4708, 
+                lng: 7.9438,
+                pros: "Gate to Black Forest, warm climate, ICE stop.",
+                hospital: "Ortenau Klinikum",
+                school: "Grimmelshausen-Gymnasium"
+            },
+            {
+                id: 3,
+                name: "Rosenheim Area",
+                region: "Bavaria",
+                lat: 47.8564, 
+                lng: 12.1225,
+                pros: "Alps view, 35m train to Munich, high quality of life.",
+                hospital: "RoMed Klinikum",
+                school: "Ignaz-Günther-Gymnasium"
+            },
+            {
+                id: 4,
+                name: "Göttingen",
+                region: "Lower Saxony",
+                lat: 51.5413, 
+                lng: 9.9158,
+                pros: "University town, central ICE hub, near Harz mountains.",
+                hospital: "University Medical Center (UMG)",
+                school: "Felix-Klein-Gymnasium"
+            },
+            {
+                id: 5,
+                name: "Augsburg West",
+                region: "Bavaria",
+                lat: 48.3705, 
+                lng: 10.8978,
+                pros: "Cheaper than Munich, 'Western Woods' nature park nearby.",
+                hospital: "Augsburg University Hospital",
+                school: "Holbein Gymnasium"
+            }
+        ];
+
+        // --- State ---
+        let map;
+        let layers = {
+            airports: L.layerGroup(),
+            trains: L.layerGroup(),
+            mountains: L.layerGroup(),
+            candidates: L.layerGroup()
+        };
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            renderCandidates();
+        });
+
+        function initMap() {
+            // Center on Germany
+            map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
+
+            // Tiles (CartoDB Voyager for clean look)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap & CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Populate Layers
+            
+            // 1. Airports (Blue)
+            AIRPORTS.forEach(ap => {
+                // Buffer Circle
+                L.circle([ap.lat, ap.lng], {
+                    radius: CONFIG.radius.airport,
+                    color: '#3b82f6',
+                    weight: 1,
+                    fillOpacity: 0.05,
+                    dashArray: '5, 5'
+                }).addTo(layers.airports);
+                
+                // Icon
+                L.marker([ap.lat, ap.lng], {
+                    icon: createIcon('airport', '#3b82f6', 'ph-airplane-tilt')
+                }).bindPopup(`<b>${ap.name}</b><br>Intl. Airport`).addTo(layers.airports);
+            });
+
+            // 2. Trains (Red)
+            ICE_HUBS.forEach(hub => {
+                L.circle([hub.lat, hub.lng], {
+                    radius: CONFIG.radius.train,
+                    color: '#ef4444',
+                    weight: 1,
+                    fillOpacity: 0.05,
+                    dashArray: '5, 5'
+                }).addTo(layers.trains);
+
+                L.marker([hub.lat, hub.lng], {
+                    icon: createIcon('train', '#ef4444', 'ph-train')
+                }).bindPopup(`<b>${hub.name}</b><br>ICE High Speed`).addTo(layers.trains);
+            });
+
+            // 3. Mountains (Green)
+            MOUNTAINS.forEach(mt => {
+                L.circle([mt.lat, mt.lng], {
+                    radius: CONFIG.radius.mountain,
+                    color: '#10b981',
+                    weight: 0,
+                    fillColor: '#10b981',
+                    fillOpacity: 0.15
+                }).addTo(layers.mountains);
+
+                L.marker([mt.lat, mt.lng], {
+                    icon: createIcon('mountain', '#10b981', 'ph-mountains')
+                }).bindPopup(`<b>${mt.name}</b><br>${mt.desc}`).addTo(layers.mountains);
+            });
+
+            // 4. Candidates (Purple Stars)
+            CANDIDATES.forEach(cand => {
+                const marker = L.marker([cand.lat, cand.lng], {
+                    icon: createCandidateIcon()
+                }).bindPopup(`
+                    <div class="bg-white">
+                        <div class="bg-slate-900 text-white p-3 mb-2 -mx-4 -mt-4">
+                            <h3 class="font-bold text-sm">${cand.name}</h3>
+                            <span class="text-xs text-slate-300">${cand.region}</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <p class="font-medium text-emerald-600"><i class="ph-bold ph-check"></i> ${cand.pros}</p>
+                            <div class="flex items-center gap-2 text-xs border-t pt-2 mt-2">
+                                <i class="ph-fill ph-first-aid text-red-400"></i> ${cand.hospital}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <i class="ph-fill ph-graduation-cap text-blue-400"></i> ${cand.school}
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                // Store reference for flying
+                cand.marker = marker;
+                marker.addTo(layers.candidates);
+            });
+
+            // Add all layers initially
+            for(let key in layers) layers[key].addTo(map);
+        }
+
+        // --- Helper Functions ---
+
+        function createIcon(type, color, iconClass) {
+            return L.divIcon({
+                className: 'custom-icon',
+                html: `<div class="w-6 h-6 rounded-full bg-white border-2 border-[${color}] flex items-center justify-center text-[${color}] shadow-md" style="border-color:${color}; color:${color}">
+                        <i class="ph-fill ${iconClass} text-xs"></i>
+                       </div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+        }
+
+        function createCandidateIcon() {
+            return L.divIcon({
+                className: 'candidate-icon',
+                html: `<div class="w-8 h-8 rounded-full bg-purple-600 border-2 border-white flex items-center justify-center text-white shadow-lg animate-bounce-slow">
+                        <i class="ph-fill ph-star text-sm"></i>
+                       </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32], // Tip of pin
+                popupAnchor: [0, -32]
+            });
+        }
+
+        function toggleLayer(name) {
+            if (map.hasLayer(layers[name])) {
+                map.removeLayer(layers[name]);
+            } else {
+                map.addLayer(layers[name]);
+            }
+        }
+
+        function renderCandidates() {
+            const container = document.getElementById('candidates-list');
+            CANDIDATES.forEach(cand => {
+                const el = document.createElement('div');
+                el.className = "p-3 bg-white border border-slate-200 rounded-xl hover:border-purple-400 hover:shadow-md cursor-pointer transition group";
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <h3 class="font-bold text-slate-800 text-sm group-hover:text-purple-700">${cand.name}</h3>
+                        <i class="ph-bold ph-arrow-right text-slate-300 group-hover:text-purple-500"></i>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">${cand.region}</p>
+                    <div class="flex gap-1">
+                        <span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] border border-blue-100">Airport OK</span>
+                        <span class="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-[10px] border border-red-100">ICE OK</span>
+                    </div>
+                `;
+                el.onclick = () => flyToCandidate(cand.id);
+                container.appendChild(el);
+            });
+        }
+
+        function flyToCandidate(id) {
+            const cand = CANDIDATES.find(c => c.id === id);
+            if (cand) {
+                map.flyTo([cand.lat, cand.lng], 11, { duration: 1.5 });
+                setTimeout(() => cand.marker.openPopup(), 1500);
+            }
+        }
+
+    </script>
+</body>
+</html>
