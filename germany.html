@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Markdown Parser (Marked) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
         #map {
@@ -31,6 +33,9 @@
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
+        .markdown-body p { margin-bottom: 0.5rem; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1rem; margin-bottom: 0.5rem; }
+        .markdown-body strong { font-weight: 700; color: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col md:flex-row overflow-hidden font-sans text-slate-800">
@@ -38,16 +43,16 @@
     <!-- Sidebar -->
     <div class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl h-[45vh] md:h-full transition-transform relative">
         <!-- Header -->
-        <div class="p-5 border-b border-slate-100 bg-slate-900 text-white">
+        <div class="p-5 border-b border-slate-100 bg-slate-900 text-white shrink-0">
             <h1 class="text-xl font-bold flex items-center gap-2">
                 <i class="ph-fill ph-house-line text-emerald-400"></i>
                 German Scout
             </h1>
-            <p class="text-xs text-slate-400 mt-1">Finding the perfect plot (< 1M pop)</p>
+            <p class="text-xs text-slate-400 mt-1">Mid-sized Cities (60k-300k)</p>
         </div>
 
         <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-6">
+        <div id="tab-content-filters" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-6">
             
             <!-- Filters / Legend -->
             <div class="space-y-3">
@@ -76,14 +81,14 @@
 
             <!-- Top Candidates -->
             <div>
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Top "Sweet Spot" Regions</h2>
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Cities (60k-300k)</h2>
                 <div id="candidates-list" class="space-y-3">
                     <!-- Items injected by JS -->
                 </div>
             </div>
         </div>
 
-        <div class="p-3 border-t border-slate-100 bg-slate-50 text-xs text-center text-slate-400">
+        <div class="p-3 border-t border-slate-100 bg-slate-50 text-xs text-center text-slate-400 shrink-0">
             Map centers on Germany (Lat: 51.16, Lng: 10.45)
         </div>
     </div>
@@ -98,6 +103,11 @@
                 <span class="font-bold text-slate-700">Tip:</span> Overlapping circles indicate ideal locations.
             </div>
         </div>
+        
+        <!-- Copy Toast Notification -->
+        <div id="toast" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium opacity-0 transition-opacity duration-300 pointer-events-none z-[2000]">
+            <i class="ph-bold ph-check-circle text-emerald-400 mr-2"></i> Prompt copied! Opening Gemini...
+        </div>
     </div>
 
     <!-- Leaflet JS -->
@@ -106,9 +116,6 @@
     <script>
         // --- Configuration ---
         const CONFIG = {
-            // Radii in meters (approximate driving distance logic)
-            // 1.5h drive ~= 100km - 120km buffer
-            // 1h train ~= 80km buffer
             radius: {
                 airport: 100000, 
                 train: 70000,
@@ -137,7 +144,10 @@
             { name: "Freiburg Hbf", lat: 47.9978, lng: 7.8421 },
             { name: "München Hbf", lat: 48.1403, lng: 11.5600 },
             { name: "Offenburg", lat: 48.4708, lng: 7.9438 },
-            { name: "Göttingen", lat: 51.5368, lng: 9.9261 }
+            { name: "Göttingen", lat: 51.5368, lng: 9.9261 },
+            { name: "Würzburg Hbf", lat: 49.7915, lng: 9.9534 },
+            { name: "Fulda", lat: 50.5528, lng: 9.6775 },
+            { name: "Augsburg Hbf", lat: 48.3655, lng: 10.8876 }
         ];
 
         const MOUNTAINS = [
@@ -146,59 +156,171 @@
             { name: "Harz Mountains", lat: 51.8, lng: 10.5, desc: "Central mountain range" },
             { name: "Eifel / Ardennes", lat: 50.3, lng: 6.9, desc: "Volcanic lakes & trails" },
             { name: "Taunus", lat: 50.2, lng: 8.45, desc: "Near Frankfurt" },
-            { name: "Bavarian Forest", lat: 49.0, lng: 13.0, desc: "Wilderness border" }
+            { name: "Bavarian Forest", lat: 49.0, lng: 13.0, desc: "Wilderness border" },
+            { name: "Rhön Mountains", lat: 50.5, lng: 10.0, desc: "UNESCO Biosphere reserve" }
         ];
 
+        // Updated Candidates List: Population 60k - 300k
         const CANDIDATES = [
             {
                 id: 1,
-                name: "Montabaur Area",
-                region: "Rhineland-Palatinate",
-                lat: 50.4367, 
-                lng: 7.8258,
-                pros: "30m to FRA Airport, ICE Stop in town, affordable land.",
-                hospital: "Catholic Hospital Montabaur",
-                school: "Mons-Tabor-Gymnasium"
+                name: "Freiburg im Breisgau",
+                region: "Baden-Württemberg",
+                lat: 47.9990, 
+                lng: 7.8421,
+                pop: "230k",
+                sun_compare: "+7% vs Berlin",
+                land_100m2: "€85k-130k",
+                rent_apt: "€1.6k",
+                rent_house: "€2.3k",
+                school_count: 28,
+                pros: "The 'Green City', direct Black Forest access, 40m to Basel Airport.",
+                hospital: "Uniklinik Freiburg",
+                school: "Rotteck-Gymnasium"
             },
             {
                 id: 2,
-                name: "Offenburg / Ortenau",
-                region: "Baden-Württemberg",
-                lat: 48.4708, 
-                lng: 7.9438,
-                pros: "Gate to Black Forest, warm climate, ICE stop.",
-                hospital: "Ortenau Klinikum",
-                school: "Grimmelshausen-Gymnasium"
+                name: "Koblenz",
+                region: "Rhineland-Palatinate",
+                lat: 50.3569, 
+                lng: 7.5938,
+                pop: "114k",
+                sun_compare: "-4% vs Berlin",
+                land_100m2: "€35k-55k",
+                rent_apt: "€1.1k",
+                rent_house: "€1.6k",
+                school_count: 14,
+                pros: "Meeting point of Rhine & Mosel, surrounded by Eifel/Westerwald hills.",
+                hospital: "Bundeswehrzentralkrankenhaus",
+                school: "Görres-Gymnasium"
             },
             {
                 id: 3,
-                name: "Rosenheim Area",
+                name: "Würzburg",
+                region: "Bavaria",
+                lat: 49.7915, 
+                lng: 9.9534,
+                pop: "127k",
+                sun_compare: "+4% vs Berlin",
+                land_100m2: "€55k-85k",
+                rent_apt: "€1.3k",
+                rent_house: "€1.9k",
+                school_count: 19,
+                pros: "Major ICE hub (1h to FRA/NUE), surrounded by vineyards and hills.",
+                hospital: "Uniklinikum Würzburg",
+                school: "Riemenschneider-Gymnasium"
+            },
+            {
+                id: 4,
+                name: "Rosenheim",
                 region: "Bavaria",
                 lat: 47.8564, 
                 lng: 12.1225,
-                pros: "Alps view, 35m train to Munich, high quality of life.",
+                pop: "63k",
+                sun_compare: "+10% vs Berlin",
+                land_100m2: "€90k-140k",
+                rent_apt: "€1.5k",
+                rent_house: "€2.2k",
+                school_count: 9,
+                pros: "Direct view of Alps, 35m train to Munich, high quality of life.",
                 hospital: "RoMed Klinikum",
                 school: "Ignaz-Günther-Gymnasium"
             },
             {
-                id: 4,
+                id: 5,
+                name: "Fulda",
+                region: "Hesse",
+                lat: 50.5528, 
+                lng: 9.6775,
+                pop: "68k",
+                sun_compare: "-7% vs Berlin",
+                land_100m2: "€25k-45k",
+                rent_apt: "€950",
+                rent_house: "€1.4k",
+                school_count: 10,
+                pros: "Central German ICE hub, immediate access to Rhön mountains.",
+                hospital: "Klinikum Fulda",
+                school: "Freiherr-vom-Stein-Schule"
+            },
+            {
+                id: 6,
+                name: "Kempten (Allgäu)",
+                region: "Bavaria",
+                lat: 47.7286, 
+                lng: 10.3158,
+                pop: "70k",
+                sun_compare: "+2% vs Berlin",
+                land_100m2: "€55k-85k",
+                rent_apt: "€1.2k",
+                rent_house: "€1.7k",
+                school_count: 11,
+                pros: "Deep in the Alpine foothills, historic city, premier hiking/skiing.",
+                hospital: "Klinikum Kempten",
+                school: "Allgäu-Gymnasium"
+            },
+            {
+                id: 7,
                 name: "Göttingen",
                 region: "Lower Saxony",
                 lat: 51.5413, 
                 lng: 9.9158,
+                pop: "119k",
+                sun_compare: "-10% vs Berlin",
+                land_100m2: "€35k-60k",
+                rent_apt: "€1.1k",
+                rent_house: "€1.5k",
+                school_count: 17,
                 pros: "University town, central ICE hub, near Harz mountains.",
                 hospital: "University Medical Center (UMG)",
                 school: "Felix-Klein-Gymnasium"
             },
             {
-                id: 5,
-                name: "Augsburg West",
+                id: 8,
+                name: "Augsburg",
                 region: "Bavaria",
                 lat: 48.3705, 
                 lng: 10.8978,
-                pros: "Cheaper than Munich, 'Western Woods' nature park nearby.",
+                pop: "300k",
+                sun_compare: "+7% vs Berlin",
+                land_100m2: "€75k-110k",
+                rent_apt: "€1.4k",
+                rent_house: "€2.1k",
+                school_count: 38,
+                pros: "Border of 300k limit. 30m to Munich, 'Western Woods' nature park.",
                 hospital: "Augsburg University Hospital",
                 school: "Holbein Gymnasium"
+            },
+            {
+                id: 9,
+                name: "Offenburg",
+                region: "Baden-Württemberg",
+                lat: 48.4708, 
+                lng: 7.9438,
+                pop: "60k",
+                sun_compare: "+8% vs Berlin",
+                land_100m2: "€45k-70k",
+                rent_apt: "€1.2k",
+                rent_house: "€1.8k",
+                school_count: 9,
+                pros: "Warm climate, ICE stop on Rhine line, Black Forest gateway.",
+                hospital: "Ortenau Klinikum",
+                school: "Grimmelshausen-Gymnasium"
+            },
+            {
+                id: 10,
+                name: "Bamberg",
+                region: "Bavaria",
+                lat: 49.8988, 
+                lng: 10.9028,
+                pop: "77k",
+                sun_compare: "+1% vs Berlin",
+                land_100m2: "€45k-75k",
+                rent_apt: "€1.1k",
+                rent_house: "€1.6k",
+                school_count: 12,
+                pros: "UNESCO heritage, ICE stop, gateway to 'Franconian Switzerland' hiking.",
+                hospital: "Klinikum Bamberg",
+                school: "Kaiser-Heinrich-Gymnasium"
             }
         ];
 
@@ -230,93 +352,81 @@
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
             // Populate Layers
-            
-            // 1. Airports (Blue)
             AIRPORTS.forEach(ap => {
-                // Buffer Circle
-                L.circle([ap.lat, ap.lng], {
-                    radius: CONFIG.radius.airport,
-                    color: '#3b82f6',
-                    weight: 1,
-                    fillOpacity: 0.05,
-                    dashArray: '5, 5'
-                }).addTo(layers.airports);
-                
-                // Icon
-                L.marker([ap.lat, ap.lng], {
-                    icon: createIcon('airport', '#3b82f6', 'ph-airplane-tilt')
-                }).bindPopup(`<b>${ap.name}</b><br>Intl. Airport`).addTo(layers.airports);
+                L.circle([ap.lat, ap.lng], { radius: CONFIG.radius.airport, color: '#3b82f6', weight: 1, fillOpacity: 0.05, dashArray: '5, 5' }).addTo(layers.airports);
+                L.marker([ap.lat, ap.lng], { icon: createIcon('airport', '#3b82f6', 'ph-airplane-tilt') }).bindPopup(`<b>${ap.name}</b><br>Intl. Airport`).addTo(layers.airports);
             });
 
-            // 2. Trains (Red)
             ICE_HUBS.forEach(hub => {
-                L.circle([hub.lat, hub.lng], {
-                    radius: CONFIG.radius.train,
-                    color: '#ef4444',
-                    weight: 1,
-                    fillOpacity: 0.05,
-                    dashArray: '5, 5'
-                }).addTo(layers.trains);
-
-                L.marker([hub.lat, hub.lng], {
-                    icon: createIcon('train', '#ef4444', 'ph-train')
-                }).bindPopup(`<b>${hub.name}</b><br>ICE High Speed`).addTo(layers.trains);
+                L.circle([hub.lat, hub.lng], { radius: CONFIG.radius.train, color: '#ef4444', weight: 1, fillOpacity: 0.05, dashArray: '5, 5' }).addTo(layers.trains);
+                L.marker([hub.lat, hub.lng], { icon: createIcon('train', '#ef4444', 'ph-train') }).bindPopup(`<b>${hub.name}</b><br>ICE High Speed`).addTo(layers.trains);
             });
 
-            // 3. Mountains (Green)
             MOUNTAINS.forEach(mt => {
-                L.circle([mt.lat, mt.lng], {
-                    radius: CONFIG.radius.mountain,
-                    color: '#10b981',
-                    weight: 0,
-                    fillColor: '#10b981',
-                    fillOpacity: 0.15
-                }).addTo(layers.mountains);
-
-                L.marker([mt.lat, mt.lng], {
-                    icon: createIcon('mountain', '#10b981', 'ph-mountains')
-                }).bindPopup(`<b>${mt.name}</b><br>${mt.desc}`).addTo(layers.mountains);
+                L.circle([mt.lat, mt.lng], { radius: CONFIG.radius.mountain, color: '#10b981', weight: 0, fillColor: '#10b981', fillOpacity: 0.15 }).addTo(layers.mountains);
+                L.marker([mt.lat, mt.lng], { icon: createIcon('mountain', '#10b981', 'ph-mountains') }).bindPopup(`<b>${mt.name}</b><br>${mt.desc}`).addTo(layers.mountains);
             });
 
-            // 4. Candidates (Purple Stars)
             CANDIDATES.forEach(cand => {
-                const marker = L.marker([cand.lat, cand.lng], {
-                    icon: createCandidateIcon()
-                }).bindPopup(`
+                const marker = L.marker([cand.lat, cand.lng], { icon: createCandidateIcon() }).bindPopup(`
                     <div class="bg-white">
                         <div class="bg-slate-900 text-white p-3 mb-2 -mx-4 -mt-4">
                             <h3 class="font-bold text-sm">${cand.name}</h3>
                             <span class="text-xs text-slate-300">${cand.region}</span>
                         </div>
-                        <div class="space-y-2 text-sm text-slate-600">
+                        <div class="space-y-3 text-sm text-slate-600">
+                            
+                            <!-- Key Stats Grid -->
+                            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2 rounded border border-slate-100">
+                                <div class="col-span-2 flex items-center gap-1.5 pb-1 border-b border-slate-200 mb-1">
+                                    <i class="ph-fill ph-sun text-amber-500"></i> 
+                                    <span class="font-bold text-slate-700">${cand.sun_compare}</span>
+                                </div>
+                                
+                                <div>
+                                    <span class="text-slate-400 block text-[10px]">Land (100m²)</span>
+                                    <span class="font-bold text-slate-700">${cand.land_100m2}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[10px]">Schools (6-16y)</span>
+                                    <span class="font-bold text-slate-700">${cand.school_count} nearby</span>
+                                </div>
+
+                                <div class="col-span-2 pt-1 mt-1 border-t border-slate-200">
+                                    <span class="text-slate-400 block text-[10px] mb-0.5">Rent (4+ Rooms ~100m²)</span>
+                                    <div class="flex justify-between">
+                                        <span>Apt: <b>${cand.rent_apt}</b></span>
+                                        <span>House: <b>${cand.rent_house}</b></span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <p class="font-medium text-emerald-600"><i class="ph-bold ph-check"></i> ${cand.pros}</p>
-                            <div class="flex items-center gap-2 text-xs border-t pt-2 mt-2">
+                            
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="ph-fill ph-users"></i> Pop: ${cand.pop}
+                                <span class="text-slate-300">|</span>
                                 <i class="ph-fill ph-first-aid text-red-400"></i> ${cand.hospital}
                             </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                <i class="ph-fill ph-graduation-cap text-blue-400"></i> ${cand.school}
-                            </div>
+
+                            <button onclick="openExternalAi('${cand.name}', '${cand.region}', '${cand.pros}')" class="w-full mt-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded flex items-center justify-center gap-1 transition-colors">
+                                <i class="ph-bold ph-arrow-square-out"></i> Analyze with Gemini
+                            </button>
                         </div>
                     </div>
                 `);
-                
-                // Store reference for flying
                 cand.marker = marker;
                 marker.addTo(layers.candidates);
             });
 
-            // Add all layers initially
             for(let key in layers) layers[key].addTo(map);
         }
 
         // --- Helper Functions ---
-
         function createIcon(type, color, iconClass) {
             return L.divIcon({
                 className: 'custom-icon',
-                html: `<div class="w-6 h-6 rounded-full bg-white border-2 border-[${color}] flex items-center justify-center text-[${color}] shadow-md" style="border-color:${color}; color:${color}">
-                        <i class="ph-fill ${iconClass} text-xs"></i>
-                       </div>`,
+                html: `<div class="w-6 h-6 rounded-full bg-white border-2 border-[${color}] flex items-center justify-center text-[${color}] shadow-md" style="border-color:${color}; color:${color}"><i class="ph-fill ${iconClass} text-xs"></i></div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12]
             });
@@ -325,11 +435,9 @@
         function createCandidateIcon() {
             return L.divIcon({
                 className: 'candidate-icon',
-                html: `<div class="w-8 h-8 rounded-full bg-purple-600 border-2 border-white flex items-center justify-center text-white shadow-lg animate-bounce-slow">
-                        <i class="ph-fill ph-star text-sm"></i>
-                       </div>`,
+                html: `<div class="w-8 h-8 rounded-full bg-purple-600 border-2 border-white flex items-center justify-center text-white shadow-lg animate-bounce-slow"><i class="ph-fill ph-star text-sm"></i></div>`,
                 iconSize: [32, 32],
-                iconAnchor: [16, 32], // Tip of pin
+                iconAnchor: [16, 32],
                 popupAnchor: [0, -32]
             });
         }
@@ -352,11 +460,24 @@
                         <h3 class="font-bold text-slate-800 text-sm group-hover:text-purple-700">${cand.name}</h3>
                         <i class="ph-bold ph-arrow-right text-slate-300 group-hover:text-purple-500"></i>
                     </div>
-                    <p class="text-xs text-slate-500 mb-2">${cand.region}</p>
-                    <div class="flex gap-1">
-                        <span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] border border-blue-100">Airport OK</span>
-                        <span class="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-[10px] border border-red-100">ICE OK</span>
+                    <p class="text-xs text-slate-500 mb-2">${cand.region} • ${cand.pop}</p>
+                    
+                    <div class="flex items-center gap-1 mb-2 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-100">
+                        <i class="ph-fill ph-sun"></i> ${cand.sun_compare}
                     </div>
+
+                    <div class="grid grid-cols-2 gap-y-1 gap-x-2 text-[10px] text-slate-600 mb-3 bg-slate-50 p-2 rounded">
+                        <div>Land (100m²):</div><div class="font-bold text-right">${cand.land_100m2}</div>
+                        <div>Apt Rent:</div><div class="font-bold text-right">${cand.rent_apt}</div>
+                        <div>House Rent:</div><div class="font-bold text-right">${cand.rent_house}</div>
+                        <div class="col-span-2 border-t border-slate-200 mt-1 pt-1 flex justify-between">
+                           <span>Schools (6-16y):</span> <span class="font-bold">${cand.school_count}</span>
+                        </div>
+                    </div>
+
+                    <button onclick="event.stopPropagation(); openExternalAi('${cand.name}', '${cand.region}', '${cand.pros}')" class="w-full py-1 text-xs text-indigo-600 font-medium bg-indigo-50 rounded hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1">
+                        <i class="ph-bold ph-arrow-square-out"></i> Analyze with Gemini
+                    </button>
                 `;
                 el.onclick = () => flyToCandidate(cand.id);
                 container.appendChild(el);
@@ -368,6 +489,33 @@
             if (cand) {
                 map.flyTo([cand.lat, cand.lng], 11, { duration: 1.5 });
                 setTimeout(() => cand.marker.openPopup(), 1500);
+            }
+        }
+
+        // --- External AI Action ---
+        async function openExternalAi(name, region, pros) {
+            // Construct Prompt
+            const prompt = `Analyze ${name} (${region}, Pop: 60-300k) for a family looking to build a house. 
+            Key features: ${pros}. 
+            Tell me about the vibe, the landscape, and why it's a good strategic choice for someone who needs to travel. Keep it under 150 words.`;
+
+            // Copy to Clipboard
+            try {
+                await navigator.clipboard.writeText(prompt);
+                
+                // Show Toast
+                const toast = document.getElementById('toast');
+                toast.classList.remove('opacity-0');
+                setTimeout(() => toast.classList.add('opacity-0'), 3000);
+
+                // Open Gemini
+                setTimeout(() => {
+                    window.open('https://gemini.google.com/app', '_blank');
+                }, 1000); // Slight delay for user to see toast
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert("Could not auto-copy prompt. Opening Gemini anyway.");
+                window.open('https://gemini.google.com/app', '_blank');
             }
         }
 
