@@ -48,7 +48,7 @@
                 <i class="ph-fill ph-house-line text-emerald-400"></i>
                 German Scout
             </h1>
-            <p class="text-xs text-slate-400 mt-1">Mid-sized Cities (60k-300k)</p>
+            <p class="text-xs text-slate-400 mt-1">Mid-sized Cities (45k-300k)</p>
         </div>
 
         <!-- Scrollable Content -->
@@ -61,7 +61,7 @@
                     <label class="flex items-center gap-3 cursor-pointer group">
                         <input type="checkbox" id="layer-airports" checked onchange="toggleLayer('airports')" class="accent-blue-600 w-4 h-4">
                         <div class="flex-1 flex items-center gap-2 text-sm text-slate-600 group-hover:text-blue-600 transition">
-                            <i class="ph-fill ph-airplane-tilt text-blue-500"></i> Airports (< 1.5h)
+                            <i class="ph-fill ph-airplane-tilt text-blue-500"></i> Airports (Inc. Border)
                         </div>
                     </label>
                     <label class="flex items-center gap-3 cursor-pointer group">
@@ -81,7 +81,7 @@
 
             <!-- Top Candidates -->
             <div>
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Cities (60k-300k)</h2>
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Cities (45k-300k)</h2>
                 <div id="candidates-list" class="space-y-3">
                     <!-- Items injected by JS -->
                 </div>
@@ -125,13 +125,22 @@
 
         // --- Data Sets ---
         const AIRPORTS = [
+            // German
             { name: "Frankfurt (FRA)", lat: 50.0379, lng: 8.5622 },
             { name: "Munich (MUC)", lat: 48.3536, lng: 11.7750 },
             { name: "Düsseldorf (DUS)", lat: 51.2891, lng: 6.7668 },
             { name: "Berlin (BER)", lat: 52.3667, lng: 13.5033 },
             { name: "Hamburg (HAM)", lat: 53.6336, lng: 9.9974 },
             { name: "Stuttgart (STR)", lat: 48.6899, lng: 9.2219 },
-            { name: "Cologne/Bonn (CGN)", lat: 50.8659, lng: 7.1427 }
+            { name: "Cologne/Bonn (CGN)", lat: 50.8659, lng: 7.1427 },
+            // International Reachable (<1.5h from border areas)
+            { name: "Zurich (ZRH)", lat: 47.4582, lng: 8.5555 },
+            { name: "Amsterdam (AMS)", lat: 52.3105, lng: 4.7683 },
+            { name: "Prague (PRG)", lat: 50.1008, lng: 14.2600 },
+            { name: "Luxembourg (LUX)", lat: 49.6233, lng: 6.2044 },
+            { name: "Salzburg (SZG)", lat: 47.7933, lng: 13.0043 },
+            { name: "Basel/Mulhouse (BSL)", lat: 47.5982, lng: 7.5292 },
+            { name: "Strasbourg (SXB)", lat: 48.5383, lng: 7.6282 }
         ];
 
         const ICE_HUBS = [
@@ -160,7 +169,7 @@
             { name: "Rhön Mountains", lat: 50.5, lng: 10.0, desc: "UNESCO Biosphere reserve" }
         ];
 
-        // Updated Candidates List: Population 60k - 300k
+        // Updated Candidates List: Population 45k - 300k
         const CANDIDATES = [
             {
                 id: 1,
@@ -174,73 +183,73 @@
                 rent_apt: "€1.6k",
                 rent_house: "€2.3k",
                 school_count: 28,
-                pros: "The 'Green City', direct Black Forest access, 40m to Basel Airport.",
+                pros: "Green City, Black Forest, near Basel/Mulhouse airport.",
                 hospital: "Uniklinik Freiburg",
                 school: "Rotteck-Gymnasium"
             },
             {
                 id: 2,
-                name: "Koblenz",
+                name: "Trier",
                 region: "Rhineland-Palatinate",
-                lat: 50.3569, 
-                lng: 7.5938,
-                pop: "114k",
-                sun_compare: "-4% vs Berlin",
-                land_100m2: "€35k-55k",
-                rent_apt: "€1.1k",
-                rent_house: "€1.6k",
-                school_count: 14,
-                pros: "Meeting point of Rhine & Mosel, surrounded by Eifel/Westerwald hills.",
-                hospital: "Bundeswehrzentralkrankenhaus",
-                school: "Görres-Gymnasium"
+                lat: 49.7597, 
+                lng: 6.6415,
+                pop: "112k",
+                sun_compare: "-2% vs Berlin",
+                land_100m2: "€30k-50k",
+                rent_apt: "€1.0k",
+                rent_house: "€1.5k",
+                school_count: 13,
+                pros: "Historic, Mosel valley, 35m to Luxembourg Airport (LUX).",
+                hospital: "Klinikum Mutterhaus",
+                school: "Humboldt-Gymnasium"
             },
             {
                 id: 3,
-                name: "Würzburg",
-                region: "Bavaria",
-                lat: 49.7915, 
-                lng: 9.9534,
-                pop: "127k",
-                sun_compare: "+4% vs Berlin",
-                land_100m2: "€55k-85k",
+                name: "Friedrichshafen",
+                region: "Baden-Württemberg",
+                lat: 47.6541, 
+                lng: 9.4793,
+                pop: "63k",
+                sun_compare: "+8% vs Berlin",
+                land_100m2: "€65k-95k",
                 rent_apt: "€1.3k",
                 rent_house: "€1.9k",
-                school_count: 19,
-                pros: "Major ICE hub (1h to FRA/NUE), surrounded by vineyards and hills.",
-                hospital: "Uniklinikum Würzburg",
-                school: "Riemenschneider-Gymnasium"
+                school_count: 8,
+                pros: "Lake Constance, has own airport (FDH), near Zurich (ZRH).",
+                hospital: "Klinikum Friedrichshafen",
+                school: "Graf-Zeppelin-Gymnasium"
             },
             {
                 id: 4,
-                name: "Rosenheim",
+                name: "Landshut",
                 region: "Bavaria",
-                lat: 47.8564, 
-                lng: 12.1225,
-                pop: "63k",
-                sun_compare: "+10% vs Berlin",
-                land_100m2: "€90k-140k",
-                rent_apt: "€1.5k",
-                rent_house: "€2.2k",
-                school_count: 9,
-                pros: "Direct view of Alps, 35m train to Munich, high quality of life.",
-                hospital: "RoMed Klinikum",
-                school: "Ignaz-Günther-Gymnasium"
+                lat: 48.5346, 
+                lng: 12.1517,
+                pop: "75k",
+                sun_compare: "+5% vs Berlin",
+                land_100m2: "€70k-110k",
+                rent_apt: "€1.2k",
+                rent_house: "€1.8k",
+                school_count: 10,
+                pros: "Very close to Munich Airport (30m), historic old town.",
+                hospital: "Klinikum Landshut",
+                school: "Hans-Carossa-Gymnasium"
             },
             {
                 id: 5,
-                name: "Fulda",
-                region: "Hesse",
-                lat: 50.5528, 
-                lng: 9.6775,
-                pop: "68k",
-                sun_compare: "-7% vs Berlin",
-                land_100m2: "€25k-45k",
-                rent_apt: "€950",
-                rent_house: "€1.4k",
-                school_count: 10,
-                pros: "Central German ICE hub, immediate access to Rhön mountains.",
-                hospital: "Klinikum Fulda",
-                school: "Freiherr-vom-Stein-Schule"
+                name: "Baden-Baden",
+                region: "Baden-Württemberg",
+                lat: 48.7656, 
+                lng: 8.2285,
+                pop: "57k",
+                sun_compare: "+6% vs Berlin",
+                land_100m2: "€60k-100k",
+                rent_apt: "€1.2k",
+                rent_house: "€1.8k",
+                school_count: 6,
+                pros: "Spa town, near Strasbourg/Karlsruhe airports, Black Forest.",
+                hospital: "Klinikum Mittelbaden",
+                school: "Markgraf-Ludwig-Gymnasium"
             },
             {
                 id: 6,
@@ -260,19 +269,19 @@
             },
             {
                 id: 7,
-                name: "Göttingen",
-                region: "Lower Saxony",
-                lat: 51.5413, 
-                lng: 9.9158,
-                pop: "119k",
-                sun_compare: "-10% vs Berlin",
-                land_100m2: "€35k-60k",
-                rent_apt: "€1.1k",
-                rent_house: "€1.5k",
-                school_count: 17,
-                pros: "University town, central ICE hub, near Harz mountains.",
-                hospital: "University Medical Center (UMG)",
-                school: "Felix-Klein-Gymnasium"
+                name: "Rosenheim",
+                region: "Bavaria",
+                lat: 47.8564, 
+                lng: 12.1225,
+                pop: "63k",
+                sun_compare: "+10% vs Berlin",
+                land_100m2: "€90k-140k",
+                rent_apt: "€1.5k",
+                rent_house: "€2.2k",
+                school_count: 9,
+                pros: "Direct view of Alps, 35m train to Munich, high quality of life.",
+                hospital: "RoMed Klinikum",
+                school: "Ignaz-Günther-Gymnasium"
             },
             {
                 id: 8,
@@ -292,35 +301,35 @@
             },
             {
                 id: 9,
-                name: "Offenburg",
-                region: "Baden-Württemberg",
-                lat: 48.4708, 
-                lng: 7.9438,
-                pop: "60k",
-                sun_compare: "+8% vs Berlin",
-                land_100m2: "€45k-70k",
-                rent_apt: "€1.2k",
-                rent_house: "€1.8k",
-                school_count: 9,
-                pros: "Warm climate, ICE stop on Rhine line, Black Forest gateway.",
-                hospital: "Ortenau Klinikum",
-                school: "Grimmelshausen-Gymnasium"
+                name: "Fulda",
+                region: "Hesse",
+                lat: 50.5528, 
+                lng: 9.6775,
+                pop: "68k",
+                sun_compare: "-7% vs Berlin",
+                land_100m2: "€25k-45k",
+                rent_apt: "€950",
+                rent_house: "€1.4k",
+                school_count: 10,
+                pros: "Central German ICE hub, immediate access to Rhön mountains.",
+                hospital: "Klinikum Fulda",
+                school: "Freiherr-vom-Stein-Schule"
             },
             {
                 id: 10,
-                name: "Bamberg",
-                region: "Bavaria",
-                lat: 49.8988, 
-                lng: 10.9028,
-                pop: "77k",
-                sun_compare: "+1% vs Berlin",
-                land_100m2: "€45k-75k",
+                name: "Koblenz",
+                region: "Rhineland-Palatinate",
+                lat: 50.3569, 
+                lng: 7.5938,
+                pop: "114k",
+                sun_compare: "-4% vs Berlin",
+                land_100m2: "€35k-55k",
                 rent_apt: "€1.1k",
                 rent_house: "€1.6k",
-                school_count: 12,
-                pros: "UNESCO heritage, ICE stop, gateway to 'Franconian Switzerland' hiking.",
-                hospital: "Klinikum Bamberg",
-                school: "Kaiser-Heinrich-Gymnasium"
+                school_count: 14,
+                pros: "Meeting point of Rhine & Mosel, surrounded by Eifel/Westerwald hills.",
+                hospital: "Bundeswehrzentralkrankenhaus",
+                school: "Görres-Gymnasium"
             }
         ];
 
@@ -332,6 +341,7 @@
             mountains: L.layerGroup(),
             candidates: L.layerGroup()
         };
+        let currentSelectedCandidate = null;
 
         // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -495,9 +505,9 @@
         // --- External AI Action ---
         async function openExternalAi(name, region, pros) {
             // Construct Prompt
-            const prompt = `Analyze ${name} (${region}, Pop: 60-300k) for a family looking to build a house. 
+            const prompt = `Analyze ${name} (${region}, Pop: 45k-300k) for a family looking to build a house. 
             Key features: ${pros}. 
-            Tell me about the vibe, the landscape, and why it's a good strategic choice for someone who needs to travel. Keep it under 150 words.`;
+            Tell me about the vibe, the landscape, proximity to international airports (including non-German ones), and why it's a good strategic choice for someone who needs to travel. Keep it under 150 words.`;
 
             // Copy to Clipboard
             try {
