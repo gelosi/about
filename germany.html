@@ -32,7 +32,7 @@
             overflow: hidden;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
-        .leaflet-popup-content { margin: 0; width: 260px !important; }
+        .leaflet-popup-content { margin: 0; width: 280px !important; }
         .markdown-body p { margin-bottom: 0.5rem; }
         .markdown-body ul { list-style-type: disc; padding-left: 1rem; margin-bottom: 0.5rem; }
         .markdown-body strong { font-weight: 700; color: #1e293b; }
@@ -48,7 +48,7 @@
                 <i class="ph-fill ph-house-line text-emerald-400"></i>
                 German Scout
             </h1>
-            <p class="text-xs text-slate-400 mt-1">Mid-sized Cities (45k-300k)</p>
+            <p class="text-xs text-slate-400 mt-1">Mid-sized Cities (40k-500k)</p>
         </div>
 
         <!-- Scrollable Content -->
@@ -81,7 +81,7 @@
 
             <!-- Top Candidates -->
             <div>
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Cities (45k-300k)</h2>
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Cities (40k-500k)</h2>
                 <div id="candidates-list" class="space-y-3">
                     <!-- Items injected by JS -->
                 </div>
@@ -133,6 +133,9 @@
             { name: "Hamburg (HAM)", lat: 53.6336, lng: 9.9974 },
             { name: "Stuttgart (STR)", lat: 48.6899, lng: 9.2219 },
             { name: "Cologne/Bonn (CGN)", lat: 50.8659, lng: 7.1427 },
+            { name: "Hannover (HAJ)", lat: 52.4611, lng: 9.6850 },
+            { name: "Nuremberg (NUE)", lat: 49.4987, lng: 11.0780 },
+            { name: "Leipzig/Halle (LEJ)", lat: 51.4118, lng: 12.2289 },
             // International Reachable (<1.5h from border areas)
             { name: "Zurich (ZRH)", lat: 47.4582, lng: 8.5555 },
             { name: "Amsterdam (AMS)", lat: 52.3105, lng: 4.7683 },
@@ -140,23 +143,71 @@
             { name: "Luxembourg (LUX)", lat: 49.6233, lng: 6.2044 },
             { name: "Salzburg (SZG)", lat: 47.7933, lng: 13.0043 },
             { name: "Basel/Mulhouse (BSL)", lat: 47.5982, lng: 7.5292 },
-            { name: "Strasbourg (SXB)", lat: 48.5383, lng: 7.6282 }
+            { name: "Strasbourg (SXB)", lat: 48.5383, lng: 7.6282 },
+            { name: "Brussels (BRU)", lat: 50.9014, lng: 4.4844 }
         ];
 
         const ICE_HUBS = [
+            // Major Hubs
+            { name: "Berlin Hbf", lat: 52.5251, lng: 13.3694 },
+            { name: "Hamburg Hbf", lat: 53.5528, lng: 10.0066 },
+            { name: "München Hbf", lat: 48.1403, lng: 11.5600 },
             { name: "Frankfurt Hbf", lat: 50.1071, lng: 8.6638 },
             { name: "Köln Hbf", lat: 50.9413, lng: 6.9583 },
-            { name: "Montabaur (ICE)", lat: 50.4367, lng: 7.8258 },
-            { name: "Limburg Süd", lat: 50.3809, lng: 8.0872 },
             { name: "Stuttgart Hbf", lat: 48.7832, lng: 9.1824 },
+            { name: "Düsseldorf Hbf", lat: 51.2199, lng: 6.7943 },
+            { name: "Hannover Hbf", lat: 52.3759, lng: 9.7320 },
+            { name: "Nürnberg Hbf", lat: 49.4452, lng: 11.0829 },
+            { name: "Leipzig Hbf", lat: 51.3453, lng: 12.3817 },
+            { name: "Dresden Hbf", lat: 51.0401, lng: 13.7314 },
+            
+            // Strategic Network Nodes
+            { name: "Mannheim Hbf", lat: 49.4795, lng: 8.4728 },
             { name: "Karlsruhe Hbf", lat: 48.9936, lng: 8.4017 },
             { name: "Freiburg Hbf", lat: 47.9978, lng: 7.8421 },
-            { name: "München Hbf", lat: 48.1403, lng: 11.5600 },
-            { name: "Offenburg", lat: 48.4708, lng: 7.9438 },
+            { name: "Basel Bad Bf", lat: 47.5664, lng: 7.6069 },
+            { name: "Erfurt Hbf", lat: 50.9726, lng: 11.0379 },
+            { name: "Kassel-Wilhelmshöhe", lat: 51.3129, lng: 9.4475 },
             { name: "Göttingen", lat: 51.5368, lng: 9.9261 },
-            { name: "Würzburg Hbf", lat: 49.7915, lng: 9.9534 },
             { name: "Fulda", lat: 50.5528, lng: 9.6775 },
-            { name: "Augsburg Hbf", lat: 48.3655, lng: 10.8876 }
+            { name: "Würzburg Hbf", lat: 49.7915, lng: 9.9534 },
+            { name: "Augsburg Hbf", lat: 48.3655, lng: 10.8876 },
+            { name: "Ulm Hbf", lat: 48.3994, lng: 9.9868 },
+            { name: "Ingolstadt Hbf", lat: 48.7441, lng: 11.4363 },
+            { name: "Regensburg Hbf", lat: 49.0116, lng: 12.1026 },
+            { name: "Passau Hbf", lat: 48.5748, lng: 13.4566 },
+            { name: "Bamberg", lat: 49.9006, lng: 10.8997 },
+            
+            // West / Rhine-Ruhr
+            { name: "Dortmund Hbf", lat: 51.5180, lng: 7.4593 },
+            { name: "Essen Hbf", lat: 51.4514, lng: 7.0128 },
+            { name: "Duisburg Hbf", lat: 51.4298, lng: 6.7761 },
+            { name: "Aachen Hbf", lat: 50.7678, lng: 6.0915 },
+            { name: "Siegburg/Bonn", lat: 50.7939, lng: 7.2029 },
+            { name: "Montabaur", lat: 50.4367, lng: 7.8258 },
+            { name: "Limburg Süd", lat: 50.3809, lng: 8.0872 },
+            { name: "Koblenz Hbf", lat: 50.3512, lng: 7.5898 },
+            { name: "Mainz Hbf", lat: 50.0013, lng: 8.2589 },
+            { name: "Wiesbaden Hbf", lat: 50.0713, lng: 8.2434 },
+            { name: "Saarbrücken Hbf", lat: 49.2407, lng: 6.9912 },
+            
+            // North
+            { name: "Bremen Hbf", lat: 53.0825, lng: 8.8130 },
+            { name: "Kiel Hbf", lat: 54.3150, lng: 10.1322 },
+            { name: "Lübeck Hbf", lat: 53.8678, lng: 10.6709 },
+            { name: "Rostock Hbf", lat: 54.0784, lng: 12.1325 },
+            { name: "Wolfsburg Hbf", lat: 52.4290, lng: 10.7937 },
+            { name: "Braunschweig Hbf", lat: 52.2520, lng: 10.5396 },
+            
+            // Westfalia/Central
+            { name: "Münster (Westf) Hbf", lat: 51.9566, lng: 7.6354 },
+            { name: "Bielefeld Hbf", lat: 52.0292, lng: 8.5327 },
+            { name: "Hamm (Westf)", lat: 51.6793, lng: 7.8105 },
+            
+            // East
+            { name: "Halle (Saale) Hbf", lat: 51.4776, lng: 11.9868 },
+            { name: "Magdeburg Hbf", lat: 52.1305, lng: 11.6276 },
+            { name: "Berlin Spandau", lat: 52.5346, lng: 13.1975 }
         ];
 
         const MOUNTAINS = [
@@ -169,7 +220,7 @@
             { name: "Rhön Mountains", lat: 50.5, lng: 10.0, desc: "UNESCO Biosphere reserve" }
         ];
 
-        // Updated Candidates List: Population 45k - 300k
+        // Updated Candidates List: Population 40k - 500k
         const CANDIDATES = [
             {
                 id: 1,
@@ -179,13 +230,33 @@
                 lng: 7.8421,
                 pop: "230k",
                 sun_compare: "+7% vs Berlin",
+                rent_compare: "+5% vs Berlin",
                 land_100m2: "€85k-130k",
                 rent_apt: "€1.6k",
                 rent_house: "€2.3k",
                 school_count: 28,
+                expats: "French, Italian",
                 pros: "Green City, Black Forest, near Basel/Mulhouse airport.",
                 hospital: "Uniklinik Freiburg",
                 school: "Rotteck-Gymnasium"
+            },
+            {
+                id: 11,
+                name: "Karlsruhe",
+                region: "Baden-Württemberg",
+                lat: 49.0069, 
+                lng: 8.4037,
+                pop: "308k",
+                sun_compare: "+5% vs Berlin",
+                rent_compare: "-10% vs Berlin",
+                land_100m2: "€60k-90k",
+                rent_apt: "€1.3k",
+                rent_house: "€1.9k",
+                school_count: 35,
+                expats: "Turkish, Italian",
+                pros: "Major Tech/University hub, Rhine harbor, gateway to Black Forest.",
+                hospital: "Städtisches Klinikum",
+                school: "Bismarck-Gymnasium"
             },
             {
                 id: 2,
@@ -195,10 +266,12 @@
                 lng: 6.6415,
                 pop: "112k",
                 sun_compare: "-2% vs Berlin",
+                rent_compare: "-20% vs Berlin",
                 land_100m2: "€30k-50k",
                 rent_apt: "€1.0k",
                 rent_house: "€1.5k",
                 school_count: 13,
+                expats: "Portuguese, French",
                 pros: "Historic, Mosel valley, 35m to Luxembourg Airport (LUX).",
                 hospital: "Klinikum Mutterhaus",
                 school: "Humboldt-Gymnasium"
@@ -211,10 +284,12 @@
                 lng: 9.4793,
                 pop: "63k",
                 sun_compare: "+8% vs Berlin",
+                rent_compare: "-5% vs Berlin",
                 land_100m2: "€65k-95k",
                 rent_apt: "€1.3k",
                 rent_house: "€1.9k",
                 school_count: 8,
+                expats: "Italian, Turkish",
                 pros: "Lake Constance, has own airport (FDH), near Zurich (ZRH).",
                 hospital: "Klinikum Friedrichshafen",
                 school: "Graf-Zeppelin-Gymnasium"
@@ -227,10 +302,12 @@
                 lng: 12.1517,
                 pop: "75k",
                 sun_compare: "+5% vs Berlin",
+                rent_compare: "-10% vs Berlin",
                 land_100m2: "€70k-110k",
                 rent_apt: "€1.2k",
                 rent_house: "€1.8k",
                 school_count: 10,
+                expats: "Polish, Romanian",
                 pros: "Very close to Munich Airport (30m), historic old town.",
                 hospital: "Klinikum Landshut",
                 school: "Hans-Carossa-Gymnasium"
@@ -243,10 +320,12 @@
                 lng: 8.2285,
                 pop: "57k",
                 sun_compare: "+6% vs Berlin",
+                rent_compare: "-5% vs Berlin",
                 land_100m2: "€60k-100k",
                 rent_apt: "€1.2k",
                 rent_house: "€1.8k",
                 school_count: 6,
+                expats: "French, Russian",
                 pros: "Spa town, near Strasbourg/Karlsruhe airports, Black Forest.",
                 hospital: "Klinikum Mittelbaden",
                 school: "Markgraf-Ludwig-Gymnasium"
@@ -259,10 +338,12 @@
                 lng: 10.3158,
                 pop: "70k",
                 sun_compare: "+2% vs Berlin",
+                rent_compare: "-20% vs Berlin",
                 land_100m2: "€55k-85k",
                 rent_apt: "€1.2k",
                 rent_house: "€1.7k",
                 school_count: 11,
+                expats: "Turkish, Italian",
                 pros: "Deep in the Alpine foothills, historic city, premier hiking/skiing.",
                 hospital: "Klinikum Kempten",
                 school: "Allgäu-Gymnasium"
@@ -275,10 +356,12 @@
                 lng: 12.1225,
                 pop: "63k",
                 sun_compare: "+10% vs Berlin",
+                rent_compare: "-5% vs Berlin",
                 land_100m2: "€90k-140k",
                 rent_apt: "€1.5k",
                 rent_house: "€2.2k",
                 school_count: 9,
+                expats: "Austrian, Croatian",
                 pros: "Direct view of Alps, 35m train to Munich, high quality of life.",
                 hospital: "RoMed Klinikum",
                 school: "Ignaz-Günther-Gymnasium"
@@ -291,10 +374,12 @@
                 lng: 10.8978,
                 pop: "300k",
                 sun_compare: "+7% vs Berlin",
+                rent_compare: "-10% vs Berlin",
                 land_100m2: "€75k-110k",
                 rent_apt: "€1.4k",
                 rent_house: "€2.1k",
                 school_count: 38,
+                expats: "Turkish, Romanian",
                 pros: "Border of 300k limit. 30m to Munich, 'Western Woods' nature park.",
                 hospital: "Augsburg University Hospital",
                 school: "Holbein Gymnasium"
@@ -307,10 +392,12 @@
                 lng: 9.6775,
                 pop: "68k",
                 sun_compare: "-7% vs Berlin",
+                rent_compare: "-30% vs Berlin",
                 land_100m2: "€25k-45k",
                 rent_apt: "€950",
                 rent_house: "€1.4k",
                 school_count: 10,
+                expats: "Turkish, Polish",
                 pros: "Central German ICE hub, immediate access to Rhön mountains.",
                 hospital: "Klinikum Fulda",
                 school: "Freiherr-vom-Stein-Schule"
@@ -323,10 +410,12 @@
                 lng: 7.5938,
                 pop: "114k",
                 sun_compare: "-4% vs Berlin",
+                rent_compare: "-25% vs Berlin",
                 land_100m2: "€35k-55k",
                 rent_apt: "€1.1k",
                 rent_house: "€1.6k",
                 school_count: 14,
+                expats: "Turkish, Syrian",
                 pros: "Meeting point of Rhine & Mosel, surrounded by Eifel/Westerwald hills.",
                 hospital: "Bundeswehrzentralkrankenhaus",
                 school: "Görres-Gymnasium"
@@ -391,6 +480,7 @@
                                 <div class="col-span-2 flex items-center gap-1.5 pb-1 border-b border-slate-200 mb-1">
                                     <i class="ph-fill ph-sun text-amber-500"></i> 
                                     <span class="font-bold text-slate-700">${cand.sun_compare}</span>
+                                    <span class="text-[10px] text-slate-400 ml-auto">Rent: ${cand.rent_compare}</span>
                                 </div>
                                 
                                 <div>
@@ -408,6 +498,11 @@
                                         <span>Apt: <b>${cand.rent_apt}</b></span>
                                         <span>House: <b>${cand.rent_house}</b></span>
                                     </div>
+                                </div>
+                                
+                                <div class="col-span-2 pt-1 mt-1 border-t border-slate-200">
+                                    <span class="text-slate-400 block text-[10px]">Expats (Top 2)</span>
+                                    <span class="font-bold text-slate-700">${cand.expats}</span>
                                 </div>
                             </div>
 
@@ -479,9 +574,8 @@
                     <div class="grid grid-cols-2 gap-y-1 gap-x-2 text-[10px] text-slate-600 mb-3 bg-slate-50 p-2 rounded">
                         <div>Land (100m²):</div><div class="font-bold text-right">${cand.land_100m2}</div>
                         <div>Apt Rent:</div><div class="font-bold text-right">${cand.rent_apt}</div>
-                        <div>House Rent:</div><div class="font-bold text-right">${cand.rent_house}</div>
-                        <div class="col-span-2 border-t border-slate-200 mt-1 pt-1 flex justify-between">
-                           <span>Schools (6-16y):</span> <span class="font-bold">${cand.school_count}</span>
+                        <div class="col-span-2 text-right border-t border-slate-200 mt-1 pt-1 text-slate-400">
+                           Rent vs Berlin: <span class="text-slate-700 font-bold">${cand.rent_compare}</span>
                         </div>
                     </div>
 
@@ -505,7 +599,7 @@
         // --- External AI Action ---
         async function openExternalAi(name, region, pros) {
             // Construct Prompt
-            const prompt = `Analyze ${name} (${region}, Pop: 45k-300k) for a family looking to build a house. 
+            const prompt = `Analyze ${name} (${region}, Pop: 40k-500k) for a family looking to build a house. 
             Key features: ${pros}. 
             Tell me about the vibe, the landscape, proximity to international airports (including non-German ones), and why it's a good strategic choice for someone who needs to travel. Keep it under 150 words.`;
 
