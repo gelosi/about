@@ -2,469 +2,831 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oleg's page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Oleg Shanyuk. Mobile engineering, systems design, and a tiny cat-versus-dogs browser game.">
+<title>Oleg Shanyuk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #f2efe6;
+    --surface: rgba(255, 255, 255, 0.76);
+    --surface-solid: #fffdf8;
+    --ink: #161512;
+    --muted: #5f5a53;
+    --stroke: #d6cfc1;
+    --accent: #0f7bff;
+    --accent-2: #eb4d2d;
+    --game-bg: #10141b;
+    --game-surface: rgba(16, 20, 27, 0.78);
+    --radius: 22px;
+    --shadow: 0 24px 50px rgba(30, 24, 12, 0.14);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     margin: 0;
-    font-family: 'Fira Code', 'Roboto Mono', 'IBM Plex Mono', 'JetBrains Mono','Source Code Pro', 'Consolas' , 'SF Mono', monospace;
-    display: grid;
-    grid-template-columns: 1fr 2fr;
+    font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 10%, rgba(255, 179, 120, 0.42), transparent 28%),
+      radial-gradient(circle at 82% 0%, rgba(52, 112, 255, 0.26), transparent 35%),
+      linear-gradient(145deg, #f0ecdf 0%, #f8f6f0 52%, #ece6d9 100%);
     min-height: 100vh;
   }
-  .sidebar {
-    background: #f9f9f9;
-    padding: 2rem;
-    box-shadow: inset -1px 0 0 #ddd;
+
+  .bg-noise {
+    position: fixed;
+    inset: 0;
+    opacity: 0.18;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .layout {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.2rem;
+    min-height: 100vh;
+    display: grid;
+    gap: 1.2rem;
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    position: relative;
+    z-index: 1;
+  }
+
+  .panel {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    animation: rise 650ms cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .profile {
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: 1.25rem;
   }
-  .sidebar h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-  .sidebar p { margin: 0.2rem 0 1rem; color: #333; }
-  .contacts { margin-top: 1rem; }
-  .contacts a { display: block; color: #0073e6; text-decoration: none; margin: 0.2rem 0; }
-  .projects { margin-top: 1rem; }
-  .projects a { display: block; color: #0073e6; text-decoration: none; margin: 0.2rem 0; }
 
-  .game { 
-    position: relative; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    overflow: hidden; 
+  .eyebrow {
+    display: inline-flex;
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.32rem 0.54rem;
+    border-radius: 999px;
+    color: var(--accent);
+    border: 1px solid rgba(15, 123, 255, 0.35);
+    background: rgba(15, 123, 255, 0.08);
+    width: fit-content;
   }
-  canvas { width: 100%; height: 100%; display: block; background: #111; }
+
+  h1 {
+    margin: 0.2rem 0 0;
+    font-size: clamp(2rem, 3vw, 2.9rem);
+    line-height: 1;
+  }
+
+  .lead {
+    margin: 0.1rem 0 0;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.44rem;
+  }
+
+  .chip {
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: var(--surface-solid);
+    padding: 0.28rem 0.54rem;
+  }
+
+  .sections {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .section {
+    border: 1px solid var(--stroke);
+    background: rgba(255, 255, 255, 0.58);
+    border-radius: 14px;
+    padding: 0.8rem;
+  }
+
+  .section h2 {
+    margin: 0 0 0.55rem;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .links {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .links a {
+    color: #0f4d97;
+    text-decoration: none;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    padding: 0.2rem 0.35rem;
+    transition: background-color 180ms ease, transform 180ms ease, color 180ms ease;
+  }
+
+  .links a:hover,
+  .links a:focus-visible {
+    background: rgba(15, 123, 255, 0.12);
+    color: #0b2f61;
+    transform: translateX(2px);
+    outline: none;
+  }
+
+  .links small {
+    color: var(--muted);
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.72rem;
+  }
+
+  .game-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: min(920px, calc(100vh - 2.4rem));
+  }
+
+  .game-header {
+    padding: 1rem 1rem 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .game-title {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .game-sub {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.78rem;
+  }
 
   .controls {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.85);
-    padding: 0.6rem 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     display: flex;
-    gap: 0.5rem;
-    z-index: 10;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: flex-end;
   }
-  .controls button {
-    padding: 0.5rem 0.8rem;
-    border-radius: 8px;
-    border: none;
+
+  button {
+    font: inherit;
+    border: 0;
     cursor: pointer;
-    background: rgba(30,30,30,0.8);
+    border-radius: 999px;
+    padding: 0.42rem 0.8rem;
+    font-size: 0.87rem;
+    background: #1f1a12;
     color: #fff;
-    font-weight: bold;
-    transition: transform 0.1s ease, background 0.2s ease;
+    transition: transform 160ms ease, opacity 160ms ease, background-color 160ms ease;
   }
-  .controls button:hover { transform: scale(1.05); background: rgba(50,50,50,0.85); }
+
+  button:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  .level {
+    background: #27231a;
+    opacity: 0.84;
+  }
+
+  .level.active {
+    background: var(--accent);
+    opacity: 1;
+  }
+
+  .secondary {
+    background: var(--accent-2);
+  }
+
+  .canvas-shell {
+    position: relative;
+    flex: 1;
+    margin: 0.2rem 1rem 1rem;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--game-bg);
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(57, 117, 255, 0.18), transparent 30%),
+      radial-gradient(circle at 85% 78%, rgba(235, 77, 45, 0.2), transparent 34%),
+      var(--game-bg);
+  }
 
   .hud {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    color: #fff;
-    font-weight: bold;
-    font-size: 1.1rem;
-    background: rgba(0,0,0,0.5);
-    padding: 0.3rem 0.6rem;
-    border-radius: 8px;
+    top: 0.7rem;
+    left: 0.7rem;
+    right: 0.7rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.8rem;
+    color: #f4f4f4;
+    background: rgba(0, 0, 0, 0.33);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 0.35rem 0.68rem;
+    backdrop-filter: blur(8px);
+    z-index: 2;
   }
 
   .overlay {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,0,0.6);
+    inset: 0;
+    z-index: 4;
     color: #fff;
-    font-size: 1.5rem;
-    font-weight: bold;
-    z-index: 5;
+    background: rgba(0, 0, 0, 0.66);
     display: none;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
   }
-  .overlay button {
-    margin-top: 1rem;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    background: limegreen;
-    color: #111;
-    transition: transform 0.1s ease;
+
+  .overlay.show {
+    display: flex;
   }
-  .overlay button:hover { transform: scale(1.05); }
+
+  .overlay h3 {
+    margin: 0;
+    font-size: clamp(1.2rem, 3vw, 1.7rem);
+  }
+
+  .overlay p {
+    margin: 0;
+    font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+    font-size: 0.95rem;
+  }
 
   .mobile-banner {
-    position: absolute; 
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.85);
-    color: white;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.83);
     display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem;
     text-align: center;
-    z-index: 20;
-  }
-  .mobile-banner button {
-    margin-top: 1rem;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    background: limegreen;
-    color: #111;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 1rem;
   }
 
-  @media (max-width: 768px) {
-    body { grid-template-columns: 1fr; grid-template-rows: auto auto; }
-    .sidebar { box-shadow: none; }
-    .game { min-height: 70vh; }
+  .mobile-banner.show {
+    display: flex;
+  }
+
+  .mobile-banner h3 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+
+  .mobile-banner p {
+    margin: 0;
+    max-width: 42ch;
+    line-height: 1.45;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .game-panel {
+      min-height: 64vh;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .layout {
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+
+    .profile {
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .game-header {
+      padding: 0.85rem 0.85rem 0.6rem;
+    }
+
+    .canvas-shell {
+      margin: 0 0.85rem 0.85rem;
+      min-height: 58vh;
+    }
+
+    .controls {
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
 </style>
 </head>
 <body>
+<div class="bg-noise"></div>
 
-<div class="sidebar">
-  <h1>Oleg Shanyuk</h1>
-  <p>Engineering</p>
-  <p>Focus: mobile, code fine tune, system design</p>
-  <p>Interested: iOS (Android, Linux)</p>
-  <div class="projects">
-    <h3>Work Logs</h3>
-    <a href="https://apps.apple.com/de/app/scanner-pro-scan-documents/id333710667">Scanner Pro</a>
-    <a href="https://apps.apple.com/us/app/foodpanda-food-groceries/id758103884">DeliveryHero – Platfom – Foodora/Foodpanda iOS apps</a>
-    <a href="https://apps.apple.com/us/app/urbi-your-mobility-solution/id804024567">Urbi iOS app</a>
-    <a href="https://apps.apple.com/de/app/flixbus-flixtrain/id778437357">FlixBus iOS app</a>
-  </div>
-  <div class="projects">
-    <h3>Fun Logs</h3>
-    <a href="https://apps.apple.com/ua/app/starboard-tack/id6479618121">Starboard Tack Watch app</a>
-    <a href="https://apps.apple.com/ua/app/beaches-app/id1042413961">Beaches iOS App</a>
-    <a href="https://apps.apple.com/us/app/suncalc-net/id761295311">SunCalc.net iOS app</a>
-  </div>
-  <div class="projects">
-    <h3>Honorable Mention Logs</h3>
-    <a href="https://apps.apple.com/ua/app/circula/id1273137131">Circula iOS app</a>
-  </div>
-  <div class="contacts">
-    <h3>Contacts</h3>
-    obviously, <a href="mailto:oleg@shanyuk.com">oleg@shanyuk.com</a>
-    <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
-    <a href="https://github.com/gelosi">GitHub</a>
-    <a href="https://mastodon.social/@gelosi">Mastodon</a> (random)
-  </div>
-</div>
+<main class="layout">
+  <aside class="panel profile">
+    <div>
+      <span class="eyebrow">this domain belongs to</span>
+      <h1>Oleg Shanyuk</h1>
+      <p class="lead">Experienced with structured text and organisation structure.</p>
+    </div>
 
-<div class="game">
-  <canvas id="gameCanvas"></canvas>
-  <div class="hud" id="hud">Time: 0.0s | Controls: Tilt</div>
-  <div class="overlay" id="gameOver">
-    Attempt Complete
-    <div id="finalTime">0.0s</div>
-    <button id="newAttempt">New Attempt</button>
-  </div>
-  <div class="controls">
-    <button id="easyMode">Easy</button>
-    <button id="hardMode">Hard</button>
-    <button id="resetGame">Reset Game</button>
-  </div>
+    <div class="sections">
+      <section class="section">
+        <h2>Pages</h2>
+        <div class="links">
+          <a href="cv.html">CV <small>work logs, projects, and honorable mentions</small></a>
+        </div>
+      </section>
 
-  <div class="mobile-banner" id="mobileBanner">
-    <h2>Tilt your phone flat</h2>
-    <p>Tilt your phone flat like if lies on the table, <strong>keep it in portrait orientation</strong>, and allow access to gyroscope to play.</p>
-    <button id="startMobileGame">Start Game</button>
-  </div>
-</div>
+      <section class="section">
+        <h2>Social Links</h2>
+        <div class="links">
+          <a href="https://www.linkedin.com/in/oleg-shanyuk">LinkedIn</a>
+          <a href="https://github.com/gelosi">GitHub</a>
+          <a href="https://mastodon.social/@gelosi">Mastodon</a>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <section class="panel game-panel" aria-label="Mini game">
+    <header class="game-header">
+      <div>
+        <p class="game-title">Cat vs Dogs</p>
+        <p class="game-sub">Survive as long as possible. Desktop: mouse. Mobile: tilt.</p>
+      </div>
+      <div class="controls" id="controls">
+        <button type="button" class="level active" id="easyMode">Easy</button>
+        <button type="button" class="level" id="hardMode">Hard</button>
+        <button type="button" class="secondary" id="resetGame">Reset</button>
+      </div>
+    </header>
+
+    <div class="canvas-shell">
+      <canvas id="gameCanvas"></canvas>
+      <div class="hud" id="hud">
+        <span id="timerLabel">Time: 0.0s</span>
+        <span id="controlLabel">Control: Mouse</span>
+      </div>
+
+      <div class="overlay" id="gameOver">
+        <h3>Attempt Complete</h3>
+        <p id="finalTime">0.0s</p>
+        <button type="button" id="newAttempt">New Attempt</button>
+      </div>
+
+      <div class="mobile-banner" id="mobileBanner">
+        <h3>Tilt your phone flat</h3>
+        <p>Keep the phone in portrait orientation, allow motion access, and use gentle tilt to steer the cat.</p>
+        <button type="button" id="startMobileGame">Start Game</button>
+      </div>
+    </div>
+  </section>
+</main>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const hud = document.getElementById('hud');
-const overlay = document.getElementById('gameOver');
-const finalTime = document.getElementById('finalTime');
-const banner = document.getElementById('mobileBanner');
-const startMobileGameBtn = document.getElementById('startMobileGame');
-const controlsPanel = document.querySelector('.controls');
-controlsPanel.style.display = 'none'; // hide panel initially on mobile
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const gamePanel = document.querySelector(".game-panel");
+  const controlsPanel = document.getElementById("controls");
+  const timerLabel = document.getElementById("timerLabel");
+  const controlLabel = document.getElementById("controlLabel");
+  const overlay = document.getElementById("gameOver");
+  const finalTime = document.getElementById("finalTime");
+  const mobileBanner = document.getElementById("mobileBanner");
 
-let width, height;
-function resizeCanvas() {
-  width = canvas.clientWidth;
-  height = canvas.clientHeight;
-  canvas.width = width;
-  canvas.height = height;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+  const easyBtn = document.getElementById("easyMode");
+  const hardBtn = document.getElementById("hardMode");
+  const resetBtn = document.getElementById("resetGame");
+  const newAttemptBtn = document.getElementById("newAttempt");
+  const startMobileGameBtn = document.getElementById("startMobileGame");
 
-let ball = { x: width/2, y: height/2, vx:0, vy:0, r:20 };
-let tiltX=0, tiltY=0;
-let survivalTime = 0;
-let lastTime = performance.now();
-let running = false;
+  const mobileMatcher = window.matchMedia("(max-width: 980px)");
+  const touchMatcher = window.matchMedia("(pointer: coarse)");
 
-function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
+  const isMobileDevice = () => mobileMatcher.matches || touchMatcher.matches;
 
-let useMouse = !isMobile(); // desktop: mouse, mobile: tilt
-let tiltEnabled = isMobile();
+  let width = 0;
+  let height = 0;
+  let lastTime = performance.now();
+  let running = false;
+  let pausedByVisibility = false;
+  let survivalTime = 0;
+  let dogCount = 2;
+  let useMouse = !isMobileDevice();
+  let tiltEnabled = false;
+  let tiltX = 0;
+  let tiltY = 0;
+  let controlMode = useMouse ? "Mouse" : "Tilt";
+  let orientationListenerAttached = false;
 
-// Desktop: controls always visible
-if(isMobile()){
-  controlsPanel.style.display = 'none';
-} else {
-  controlsPanel.style.display = 'flex';
-  tiltEnabled = false;
-}
+  const ball = { x: 0, y: 0, vx: 0, vy: 0, r: 20 };
+  let mouseX = 0;
+  let mouseY = 0;
+  let obstacles = [];
 
-// Mouse
-let mouseX = width/2, mouseY = height/2;
-canvas.addEventListener('mousemove', (e)=>{
-  const rect = canvas.getBoundingClientRect();
-  mouseX = e.clientX - rect.left;
-  mouseY = e.clientY - rect.top;
-});
+  function resizeCanvas() {
+    const bounds = canvas.getBoundingClientRect();
+    width = Math.max(1, Math.floor(bounds.width));
+    height = Math.max(1, Math.floor(bounds.height));
+    canvas.width = width;
+    canvas.height = height;
 
-// Tilt
-function enableTilt(){
-  if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission==='function'){
-    DeviceMotionEvent.requestPermission().then(res=>{
-      if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
-    }).catch(console.error);
-  }else{
-    window.addEventListener('deviceorientation', handleOrientation);
-  }
-}
-function handleOrientation(e){ tiltX=e.gamma/45; tiltY=e.beta/45; }
-function checkOrientation()  {  
-  if (window.innerWidth > window.innerHeight){
-    // landscape
-    resizeCanvas();
-  } else {
-    // portrait
-    resizeCanvas();
-  }
-}
-window.addEventListener('resize', checkOrientation);
-
-// Buttons
-document.getElementById('resetGame').addEventListener('click', ()=>resetGame(dogCount));
-document.getElementById('easyMode').addEventListener('click', ()=>resetGame(2));
-document.getElementById('hardMode').addEventListener('click', ()=>resetGame(10));
-document.getElementById('newAttempt').addEventListener('click', ()=>{
-  overlay.style.display='none'; 
-  resetGame(dogCount);
-});
-
-// Reset with difficulty
-function resetGame(count = dogCount){
-  ball.x=width/2; ball.y=height/2; ball.vx=0; ball.vy=0;
-  survivalTime=0;
-  obstacles=[];
-  dogCount = count; // store choice
-  for(let i=0;i<count;i++) spawnObstacle();
-  running=true;
-  controlsPanel.style.display='flex'; // only show on mobile after starting
-}
-
-// Obstacles
-let obstacles = [];
-let dogCount = 2; // ✅ default is Easy (2 dogs)
-
-function spawnObstacle(){
-  const r = 15 + Math.random()*10;
-  obstacles.push({
-    x: Math.random()*width,
-    y: Math.random()*height,
-    vx: (Math.random()-0.5)*200,
-    vy: (Math.random()-0.5)*200,
-    r: r
-  });
-}
-for(let i=0;i<6;i++) spawnObstacle();
-
-// Game logic
-function update(dt){
-  if(!running) return;
-  survivalTime += dt;
-
-  // Player movement
-  if(useMouse){
-    const dx = mouseX - ball.x, dy = mouseY - ball.y;
-    ball.vx += dx * 0.002; ball.vy += dy * 0.002;
-  } else if(tiltEnabled){
-    ball.vx += tiltX * 0.5; ball.vy += tiltY * 0.5;
+    if (!ball.x && !ball.y) {
+      ball.x = width / 2;
+      ball.y = height / 2;
+      mouseX = width / 2;
+      mouseY = height / 2;
+    }
   }
 
-  ball.vx *= 0.95; ball.vy *= 0.95;
-  ball.x += ball.vx * dt * 60;
-  ball.y += ball.vy * dt * 60;
-
-  // Bounce off walls
-  if(ball.x-ball.r<0 || ball.x+ball.r>width){ 
-    ball.vx*=-1; ball.x=Math.max(ball.r, Math.min(width-ball.r, ball.x)); 
-    if(navigator.vibrate) navigator.vibrate(20);
-  }
-  if(ball.y-ball.r<0 || ball.y+ball.r>height){ 
-    ball.vy*=-1; ball.y=Math.max(ball.r, Math.min(height-ball.r, ball.y)); 
-    if(navigator.vibrate) navigator.vibrate(20);
+  function updateModeLabels() {
+    controlLabel.textContent = "Control: " + controlMode;
   }
 
-  // Update dog positions
-  obstacles.forEach(o=>{
-    o.x += o.vx * dt;
-    o.y += o.vy * dt;
-    if(o.x-o.r<0||o.x+o.r>width) o.vx*=-1;
-    if(o.y-o.r<0||o.y+o.r>height) o.vy*=-1;
-  });
+  function setControlMode(mode) {
+    controlMode = mode;
+    updateModeLabels();
+  }
 
-  // ✅ Dog–dog collisions with size-based mass
-  for (let i = 0; i < obstacles.length; i++) {
-    for (let j = i + 1; j < obstacles.length; j++) {
-      const a = obstacles[i], b = obstacles[j];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const minDist = a.r + b.r;
+  function updateDifficultyButtons() {
+    easyBtn.classList.toggle("active", dogCount === 2);
+    hardBtn.classList.toggle("active", dogCount === 10);
+  }
 
-      if (dist < minDist) {
-        // Mass proportional to area (πr²) → we use r²
+  function spawnObstacle() {
+    const r = 14 + Math.random() * 12;
+    obstacles.push({
+      x: r + Math.random() * Math.max(1, width - r * 2),
+      y: r + Math.random() * Math.max(1, height - r * 2),
+      vx: (Math.random() - 0.5) * 210,
+      vy: (Math.random() - 0.5) * 210,
+      r
+    });
+  }
+
+  function enableTilt() {
+    const addListener = () => {
+      if (orientationListenerAttached) return;
+      window.addEventListener("deviceorientation", handleOrientation, { passive: true });
+      orientationListenerAttached = true;
+    };
+
+    if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+      DeviceMotionEvent.requestPermission().then((result) => {
+        if (result === "granted") {
+          tiltEnabled = true;
+          useMouse = false;
+          setControlMode("Tilt");
+          addListener();
+        } else {
+          tiltEnabled = false;
+          useMouse = true;
+          setControlMode("Touch");
+        }
+      }).catch(() => {
+        tiltEnabled = false;
+        useMouse = true;
+        setControlMode("Touch");
+      });
+      return;
+    }
+
+    tiltEnabled = true;
+    useMouse = false;
+    setControlMode("Tilt");
+    addListener();
+  }
+
+  function handleOrientation(event) {
+    tiltX = (event.gamma || 0) / 40;
+    tiltY = (event.beta || 0) / 40;
+  }
+
+  function resetGame(count = dogCount) {
+    dogCount = count;
+    updateDifficultyButtons();
+
+    ball.x = width / 2;
+    ball.y = height / 2;
+    ball.vx = 0;
+    ball.vy = 0;
+
+    survivalTime = 0;
+    obstacles = [];
+    for (let i = 0; i < dogCount; i += 1) spawnObstacle();
+
+    overlay.classList.remove("show");
+    running = true;
+  }
+
+  function vibrate(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  }
+
+  function update(dt) {
+    if (!running) return;
+    survivalTime += dt;
+
+    if (useMouse) {
+      const dx = mouseX - ball.x;
+      const dy = mouseY - ball.y;
+      ball.vx += dx * 0.0022;
+      ball.vy += dy * 0.0022;
+    } else if (tiltEnabled) {
+      ball.vx += tiltX * 0.55;
+      ball.vy += tiltY * 0.55;
+    }
+
+    ball.vx *= 0.95;
+    ball.vy *= 0.95;
+    ball.x += ball.vx * dt * 60;
+    ball.y += ball.vy * dt * 60;
+
+    if (ball.x - ball.r < 0 || ball.x + ball.r > width) {
+      ball.vx *= -1;
+      ball.x = Math.max(ball.r, Math.min(width - ball.r, ball.x));
+      vibrate(16);
+    }
+    if (ball.y - ball.r < 0 || ball.y + ball.r > height) {
+      ball.vy *= -1;
+      ball.y = Math.max(ball.r, Math.min(height - ball.r, ball.y));
+      vibrate(16);
+    }
+
+    for (const obstacle of obstacles) {
+      obstacle.x += obstacle.vx * dt;
+      obstacle.y += obstacle.vy * dt;
+
+      if (obstacle.x - obstacle.r < 0 || obstacle.x + obstacle.r > width) obstacle.vx *= -1;
+      if (obstacle.y - obstacle.r < 0 || obstacle.y + obstacle.r > height) obstacle.vy *= -1;
+    }
+
+    for (let i = 0; i < obstacles.length; i += 1) {
+      for (let j = i + 1; j < obstacles.length; j += 1) {
+        const a = obstacles[i];
+        const b = obstacles[j];
+
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 0.0001;
+        const minDist = a.r + b.r;
+
+        if (dist >= minDist) continue;
+
         const ma = a.r * a.r;
         const mb = b.r * b.r;
-
-        // Normal
         const nx = dx / dist;
         const ny = dy / dist;
 
-        // Relative velocity along normal
         const dvx = a.vx - b.vx;
         const dvy = a.vy - b.vy;
         const relVel = dvx * nx + dvy * ny;
 
         if (relVel < 0) {
-          // Elastic collision impulse (1D along normal)
           const impulse = (2 * relVel) / (ma + mb);
-
-          // Apply velocity change
           a.vx -= impulse * mb * nx;
           a.vy -= impulse * mb * ny;
           b.vx += impulse * ma * nx;
           b.vy += impulse * ma * ny;
         }
 
-        // Position correction (push apart to avoid overlap)
         const overlap = (minDist - dist) / 2;
-        a.x -= nx * (overlap * (mb / (ma + mb)));
-        a.y -= ny * (overlap * (mb / (ma + mb)));
-        b.x += nx * (overlap * (ma / (ma + mb)));
-        b.y += ny * (overlap * (ma / (ma + mb)));
+        a.x -= nx * overlap * (mb / (ma + mb));
+        a.y -= ny * overlap * (mb / (ma + mb));
+        b.x += nx * overlap * (ma / (ma + mb));
+        b.y += ny * overlap * (ma / (ma + mb));
       }
     }
-  }
 
-  // check if dogs are in the box after collision updates
-  // After updating all dogs and handling dog–dog collisions:
-  for (let o of obstacles) {
-    // Clamp inside horizontal bounds
-    if (o.x - o.r < 0) {
-      o.x = o.r;
-      if (o.vx < 0) o.vx *= -1;
-    }
-    if (o.x + o.r > width) {
-      o.x = width - o.r;
-      if (o.vx > 0) o.vx *= -1;
+    for (const obstacle of obstacles) {
+      if (obstacle.x - obstacle.r < 0) {
+        obstacle.x = obstacle.r;
+        if (obstacle.vx < 0) obstacle.vx *= -1;
+      }
+      if (obstacle.x + obstacle.r > width) {
+        obstacle.x = width - obstacle.r;
+        if (obstacle.vx > 0) obstacle.vx *= -1;
+      }
+      if (obstacle.y - obstacle.r < 0) {
+        obstacle.y = obstacle.r;
+        if (obstacle.vy < 0) obstacle.vy *= -1;
+      }
+      if (obstacle.y + obstacle.r > height) {
+        obstacle.y = height - obstacle.r;
+        if (obstacle.vy > 0) obstacle.vy *= -1;
+      }
     }
 
-    // Clamp inside vertical bounds
-    if (o.y - o.r < 0) {
-      o.y = o.r;
-      if (o.vy < 0) o.vy *= -1;
-    }
-    if (o.y + o.r > height) {
-      o.y = height - o.r;
-      if (o.vy > 0) o.vy *= -1;
-    }
-  }
+    for (const obstacle of obstacles) {
+      const dx = ball.x - obstacle.x;
+      const dy = ball.y - obstacle.y;
+      const hit = Math.hypot(dx, dy) < ball.r + obstacle.r;
+      if (!hit) continue;
 
-
-  // Check collision with cat
-  for(let o of obstacles){
-    const dx=ball.x-o.x, dy=ball.y-o.y;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<ball.r+o.r){
-      finalTime.textContent = survivalTime.toFixed(1)+'s';
-      overlay.style.display='flex';
-      running=false;
-      if(navigator.vibrate) navigator.vibrate([100,50,150]);
+      finalTime.textContent = "Survived: " + survivalTime.toFixed(1) + "s";
+      overlay.classList.add("show");
+      running = false;
+      vibrate([90, 40, 120]);
+      break;
     }
   }
-}
 
-function draw(){
-  ctx.clearRect(0,0,width,height);
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
 
-  // 🐱 Player (cat)
-  ctx.font = (ball.r * 2) + "px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("🐱", ball.x, ball.y);
-
-  // 🐶 Obstacles (dogs)
-  obstacles.forEach(o=>{
-    ctx.font = (o.r * 2) + "px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("🐶", o.x, o.y);
-  });
+    ctx.font = (ball.r * 2) + "px sans-serif";
+    ctx.fillText("🐱", ball.x, ball.y);
 
-  hud.textContent = 'Time: ' + survivalTime.toFixed(1) + 's | Controls: ' + (useMouse ? 'Mouse' : 'Tilt');
-}
-
-function loop(now){
-  const dt=(now-lastTime)/1000; lastTime=now;
-  if(running) update(dt);
-  draw();
-  requestAnimationFrame(loop);
-}
-
-const observer = new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      if(isMobile() && !running){ 
-        banner.style.display='flex';
-      } else {
-        running=true;
-      }
-    } else {
-      running=false;
+    for (const obstacle of obstacles) {
+      ctx.font = (obstacle.r * 2) + "px sans-serif";
+      ctx.fillText("🐶", obstacle.x, obstacle.y);
     }
+
+    timerLabel.textContent = "Time: " + survivalTime.toFixed(1) + "s";
+  }
+
+  function gameLoop(now) {
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
+    if (running) update(dt);
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  function setDesktopMode() {
+    useMouse = true;
+    tiltEnabled = false;
+    setControlMode("Mouse");
+    mobileBanner.classList.remove("show");
+    controlsPanel.style.visibility = "visible";
+    resetGame(dogCount);
+  }
+
+  function setMobileMode() {
+    running = false;
+    useMouse = false;
+    tiltEnabled = false;
+    setControlMode("Tilt");
+    controlsPanel.style.visibility = "hidden";
+    mobileBanner.classList.add("show");
+  }
+
+  function onViewChange(entries) {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        if (pausedByVisibility) {
+          running = true;
+          pausedByVisibility = false;
+        }
+      } else if (running) {
+        running = false;
+        pausedByVisibility = true;
+      }
+    }
+  }
+
+  canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = event.clientX - rect.left;
+    mouseY = event.clientY - rect.top;
   });
-},{threshold:0.1});
-observer.observe(document.querySelector('.game'));
+  canvas.addEventListener("touchstart", (event) => {
+    if (!event.touches.length) return;
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    mouseX = touch.clientX - rect.left;
+    mouseY = touch.clientY - rect.top;
+  }, { passive: true });
+  canvas.addEventListener("touchmove", (event) => {
+    if (!event.touches.length) return;
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    mouseX = touch.clientX - rect.left;
+    mouseY = touch.clientY - rect.top;
+  }, { passive: true });
 
-if(isMobile()){
-  checkOrientation();
-} else {
-  resetGame(); // desktop starts immediately
-}
+  easyBtn.addEventListener("click", () => resetGame(2));
+  hardBtn.addEventListener("click", () => resetGame(10));
+  resetBtn.addEventListener("click", () => resetGame(dogCount));
 
-startMobileGameBtn.addEventListener('click', ()=>{
-  banner.style.display='none';
-  enableTilt();                 // ✅ now called on user gesture
-  checkOrientation();
-  resetGame();
-  tiltEnabled = true;
-});
+  newAttemptBtn.addEventListener("click", () => {
+    overlay.classList.remove("show");
+    resetGame(dogCount);
+  });
 
-requestAnimationFrame((t)=>{lastTime=t; loop(t);});
+  startMobileGameBtn.addEventListener("click", () => {
+    mobileBanner.classList.remove("show");
+    controlsPanel.style.visibility = "visible";
+    enableTilt();
+    resetGame(dogCount);
+  });
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+  });
+
+  const handleViewportChange = () => {
+    if (isMobileDevice()) {
+      setMobileMode();
+    } else {
+      setDesktopMode();
+    }
+  };
+
+  if (typeof mobileMatcher.addEventListener === "function") {
+    mobileMatcher.addEventListener("change", handleViewportChange);
+  } else if (typeof mobileMatcher.addListener === "function") {
+    mobileMatcher.addListener(handleViewportChange);
+  }
+
+  const observer = new IntersectionObserver(onViewChange, { threshold: 0.15 });
+  observer.observe(gamePanel);
+
+  resizeCanvas();
+  updateDifficultyButtons();
+
+  if (isMobileDevice()) {
+    setMobileMode();
+  } else {
+    setDesktopMode();
+  }
+
+  updateModeLabels();
+  requestAnimationFrame((time) => {
+    lastTime = time;
+    gameLoop(time);
+  });
 </script>
-
 </body>
 </html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="CV of Oleg Shanyuk: mobile engineering work logs, private projects, and honorable mentions.">
+<title>CV | Oleg Shanyuk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2efe6;
+    --surface: rgba(255, 255, 255, 0.82);
+    --ink: #161512;
+    --muted: #5f5a53;
+    --stroke: #d6cfc1;
+    --accent: #0f7bff;
+    --radius: 18px;
+    --shadow: 0 18px 40px rgba(30, 24, 12, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255, 179, 120, 0.35), transparent 28%),
+      radial-gradient(circle at 85% 0%, rgba(52, 112, 255, 0.22), transparent 35%),
+      linear-gradient(145deg, #f0ecdf 0%, #f8f6f0 52%, #ece6d9 100%);
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 1.25rem;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    margin: 0;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.05;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+  }
+
+  .nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .nav a {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    color: #0f4d97;
+    text-decoration: none;
+    border: 1px solid rgba(15, 123, 255, 0.3);
+    border-radius: 999px;
+    padding: 0.35rem 0.62rem;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .section h2 {
+    margin: 0 0 0.65rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .entry {
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--stroke);
+  }
+
+  .entry:first-of-type {
+    border-top: 0;
+    padding-top: 0.1rem;
+  }
+
+  .entry h3 {
+    margin: 0;
+    font-size: 1.03rem;
+  }
+
+  .entry p {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+    line-height: 1.48;
+  }
+
+  .meta {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  a {
+    color: #0f4d97;
+  }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 0.8rem; }
+    .section { padding: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="topbar">
+    <div>
+      <h1 class="title">Oleg Shanyuk, CV</h1>
+      <p class="subtitle">Mobile engineering with emphasis on product velocity, architecture, and maintainable delivery.</p>
+    </div>
+    <nav class="nav" aria-label="Page navigation">
+      <a href="index.html">Home</a>
+    </nav>
+  </header>
+
+  <section class="section" aria-labelledby="work-logs-title">
+    <h2 id="work-logs-title">Work Logs</h2>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/de/app/scanner-pro-scan-documents/id333710667">Readdle</a></h3>
+      <p class="meta">product engineering lead</p>
+      <p>A part of team working on Scanner Pro - the best scanning software for iOS.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/us/app/foodpanda-food-groceries/id758103884">DeliveryHero</a></h3>
+      <p class="meta">staff engineer</p>
+      <p>Was a part of Platform / Mobile Infra. Later mobile Security. Our focus was on creating a safe and productive development environment for hundreds of engineers working on food delivery apps (foodora, foodpanda,etc).</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/us/app/urbi-your-mobility-solution/id804024567">Urbi</a></h3>
+      <p class="meta">software engineer</p>
+      <p>Early stage startup chasing the aggregation of carsharing (scooter,bike-sharing) markets in Europe.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/de/app/flixbus-flixtrain/id778437357">FlixBus</a></h3>
+      <p class="meta">software engineer</p>
+      <p>Initially started at MeinFernbus (later we merged with FlixBus). First engineer for iOS apps. 6 weeks from hire to market.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://obrij.com">Obrij</a></h3>
+      <p class="meta">software engineer / co-owner</p>
+      <p>My take to run independent business. Independent and highly skilled team of mobile engineers. We would probably exist, if not russian war against Ukraine. Obrij operated 2012-2014.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://star.global">Star (ex. Cogniance)</a></h3>
+      <p class="meta">software engineer</p>
+      <p>Most of the time with Cogniance (now Star) I've spent with CloudMade - great, and challenging work on building from ground up commercial GIS system. During that time I had a chance to meet Postres/PostGIS, mapnik, Python, C++, hardcore backend development. And, my first touch and experience with iPhone, which turned me into iOS engineer later on. First iOS app in AppStore (MapZen). First public SDK - CloudMade SDK.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://www.crunchbase.com/organization/sonopia">Sonopia</a></h3>
+      <p class="meta">software engineer</p>
+      <p>MNVO. Too early for it's time. It was before iPhone. I was walking on the street with Motorola Razr and the C++ app we were building for it. Taking pics and uploading to my blog. We made instagram + twitter without realising it. Before it became cool.</p>
+    </article>
+  </section>
+
+  <section class="section" aria-labelledby="private-projects-title">
+    <h2 id="private-projects-title">Private Projects</h2>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/ua/app/starboard-tack/id6479618121">Starboard Tack Watch App</a></h3>
+      <p>Sailing companion for Apple Watch. Record your race, get basic stats. The App - autonomous from iPhone.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/us/app/suncalc-net/id761295311">SunCalc.net iOS App</a></h3>
+      <p>Solar-position and daylight planning utility built for field use and quick visual interpretation. Doing that product for more than decate now. Amazing how people are using it. From photography planning and traispotting, to organising plants on the balcony or a backyard. So cool to hear your feedback peole!</p>
+    </article>
+  </section>
+
+  <section class="section" aria-labelledby="mentions-title">
+    <h2 id="mentions-title">Honorable Mention</h2>
+
+    <article class="entry">
+      <h3><a href="https://www.linkedin.com/products/sympli-versions">Sympli Versions Mac App</a></h3>
+      <p>Versioning support for design handoff workflows on macOS. Basically, Git for Designers.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/ua/app/beaches-app/id1042413961">Beaches iOS App</a></h3>
+      <p>Location-oriented app focused on discoverability and lightweight session UX.</p>
+    </article>
+
+    <article class="entry">
+      <h3><a href="https://apps.apple.com/ua/app/circula/id1273137131">Circula iOS App</a></h3>
+      <p>Expense tracking app with practical workflows for routine finance handling.</p>
+    </article>
+  </section>
+</main>
+</body>
+</html>
